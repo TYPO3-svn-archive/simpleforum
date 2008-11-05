@@ -59,6 +59,26 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 
 		$this->processSubmission();
 
+		//UPDATE extension "cache"
+		if ($this->piVars['updateAll'] == 1) {
+
+			$forums = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid, crdate, topic, description, postnumber, lastposttime, lastpostuser, lastpostusername',
+				'tx_simpleforum_forums', 'hidden=0 AND deleted=0');
+			if (!is_array($forums)) $forums = array();
+
+			foreach ($forums as $forum) {
+				$threads = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,tstamp,crdate,fid,topic,replysnumber,replyslast,replyslastname,replyslastuid,authorname,author,locked,usergroup',
+					'tx_simpleforum_threads', 'hidden=0 AND deleted=0', 'replyslast DESC');
+				if (!is_array($threads)) $threads = array();
+
+				foreach ($threads as $thread) {
+					$this->thread_update($thread['uid']);
+				}
+
+				$this->forum_update($forum['uid']);
+			}
+		}
+
 		if (empty($this->piVars['tid']) && empty($this->piVars['fid'])) {
 			$content = $this->forums();
 
@@ -198,7 +218,7 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 	function posts($threadId) {
 		$template = $this->cObj->getSubpart($this->templateCode, '###MESSAGELIST###');
 
-		$where = 'hidden=0 AND deleted=0 AND tid='.$threadId;
+		$where = 'approved=1 hidden=0 AND deleted=0 AND tid='.$threadId;
 		$posts = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,tstamp,crdate,author,message,approved',
 			'tx_simpleforum_posts', $where, 'crdate ASC');
 		if (!is_array($posts)) $posts = array();
@@ -431,7 +451,7 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 			$user = $this->data_user($posts[0]['author']);
 
 			$record = array(
-				'replysnumber' => count($posts),
+				'replysnumber' => (count($posts)-1),
 				'replyslast' => $posts[0]['crdate'],
 				'replyslastname' => $user['username'],
 				'replyslastuid' => $user['uid'],
@@ -502,9 +522,9 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 			$username = $user['username'];
 		}
 		$content = $this->pi_linkToPage(
-		$username,
-		$this->conf['profilePID'],'',
-		array('tx_feuser_pi1[uid]'=>$userId)
+			$username,
+			$this->conf['profilePID'],'',
+			array($this->conf['profileParam']=>$userId)
 		);
 		return $content;
 	}
