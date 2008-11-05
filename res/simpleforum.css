@@ -1,0 +1,34 @@
+@charset "utf-8";
+/* CSS Document */
+
+.forumList { border-bottom:1px solid #EEEEEE; margin:0 0 5px; width:620px; }
+.forumList .tableTitle { border-bottom:1px solid #EEEEEE; text-align:left; }
+.forumList .tableTitle h2 { margin: 3px 0 2px 2px !important; }
+.forumList .titlePadding { padding:2px 5px 2px 8px; }
+.forumList .tableTitle { border-bottom:1px solid #EEEEEE; text-align:left; }
+.forumList .tableTitle th { background:#F7F6F6; border:1px solid #EEEEEE; padding-left:2px; text-align:left; }
+.forumList .post { overflow:hidden; padding-left:10px; padding-top:10px; width:580px; }
+.forumList .postedDate { margin:4px 4px 0 0; text-align:right; }
+.forumList .quote { background:transparent url(images/shaded_background.png) repeat-x scroll center top; border:1px solid #E0E0E0; margin:5px; padding:5px; }
+.forumList .forum-tr2 { background-color:#F7F6F6; }
+.forumList td { padding:2px 5px 2px 8px; }
+.breadCrumb { margin:10px 0 5px; }
+.messageList { border-bottom:1px solid #EEEEEE; margin:0 0 5px; overflow:hidden; width:620px; }
+.messageList .tableTitle { border-bottom:1px solid #EEEEEE; text-align:left; }
+.messageList .titlePadding { padding:2px 5px 2px 8px; }
+.messageList .tableTitle { border-bottom:1px solid #EEEEEE; text-align:left; }
+.messageList .tableTitle th { background:#F7F6F6; border:1px solid #EEEEEE; padding-left:2px; text-align:left; }
+.messageList .post { overflow:hidden; padding-top:10px; padding-bottom: 10px; }
+.messageList .postedDate { margin:4px 4px 0 0; text-align:right; }
+.messageList .quote { background:transparent url(images/shaded_background.png) repeat-x scroll center top; border:1px solid #E0E0E0; margin:5px 0; overflow:hidden; padding:5px; width:585px; }
+.messageList .forum-tr1,
+.messageList .forum-tr2 { background:transparent url(images/shaded_background.png) repeat-x scroll center top; }
+.messageList td { padding:2px 5px 2px 8px; }
+.threadName { margin:5px 0; width:718px; }
+.popularBar { display:block; padding-top:4px; }
+.userInfo { padding:4px 0 0 8px; vertical-align:top; width:100px; }
+.replyBox { margin-top: 25px; }
+.replyBox textarea { margin: 4px 0 7px; }
+.replyBox h3 { margin-bottom: 12px !important; font-size:1.3em !important; }
+.replyBox label { font-weight: bold; }
+.tx-simpleforum-pi1 { margin-top: 20px; }

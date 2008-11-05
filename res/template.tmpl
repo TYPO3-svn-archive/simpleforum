@@ -1,0 +1,131 @@
+<!-- ###HEADER_ADDITIONS### begin
+		This section will be appended to html headers of the output. Allows you to include CSS, JS, etc
+		Markers in this section:
+			SITE_REL_PATH	- path to file relative to web root, ending with slash
+-->
+<link rel="stylesheet" href="###SITE_REL_PATH###res/simpleforum.css" type="text/css" />
+<!-- ###HEADER_ADDITIONS### end -->
+
+<!-- ###FORUMLIST### -->
+<table cellpadding="0" cellspacing="1" class="forumList">
+	<!-- ###TITLEROW### -->
+	<tr class="tableTitle">
+		<th width="350"><h2>###LABEL_TITLE###</h2></th>
+		<th width="50">###LABEL_THREADNUMBER###</th>
+		<th width="166">###LABEL_LASTPOST###</th>
+	</tr>
+	<!-- ###TITLEROW### -->
+	<tr>
+		<td colspan="4" class="borderbot"></td>
+	</tr>
+	<!-- ###DATAROW### -->
+	<tr class="forum-tr###ALTID###">
+		<td class="td_forum">
+			###FORUM_TITLE###<br/>
+			<span class="text">###FORUM_DESCRIPTION###</span>
+		</td>
+		<td class="td_forum">
+			<div align="center"><span class="text">###THREADNUMBER###</span></div>
+		</td>
+		<td class="td_forum">
+			###LASTPOST_DATETIME### von<br/>
+			###LASTPOST_USER###
+		</td>
+	</tr>
+	<!-- ###DATAROW### -->
+</table>
+<!-- ###FORUMLIST### -->
+
+
+<!-- ###THREADLIST### -->
+<h1>###THREADTITLE###</h1>
+<div class="breadCrumb">###BREADCRUMB###</div>
+<div class="navBar">
+	<div>###NAVBAR###</div>
+</div>
+<table class="forumList">
+	<!-- ###TITLEROW### -->
+	<tr class="tableTitle titlePadding">
+		<th>###LABEL_TOPIC###</th>
+		<th width="5%">###LABEL_REPLYS###</th>
+		<th width="5%">###LABEL_AUTHOR###</th>
+		<th width="30%">###LABEL_LASTPOST###</th>
+	</tr>
+	<!-- ###TITLEROW### -->
+	<!-- ###DATAROW### -->
+	<tr class="forum-tr###ALTID###">
+		<td>###SPECIALICON### ###THREADTITLE###</td>
+		<td class="forum-tr###ALTID###"><div align="center">###POSTSNUMBER###</div></td>
+		<td class="forum-tr###ALTID###">###AUTHOR###</td>
+		<td class="forum-tr###ALTID###">###LASTPOST_DATETIME### von ###LASTPOST_USER###</td>
+	</tr>
+	<!-- ###DATAROW### -->
+</table>
+<div style="float:right;">
+	###PAGEBROWSER###
+</div>
+###NEWTHREADFORM###
+<div class="clear"></div>
+<!-- ###THREADLIST### -->
+
+
+<!-- ###MESSAGELIST### -->
+<h1>###THREADTITLE###</h1>
+<div class="breadCrumb">
+	###BREADCRUMB###
+</div>
+<div class="navBar">
+	###NAVBAR###
+</div>
+<table class="messageList">
+	<!-- ###TITLEROW### -->
+	<tr class="tableTitle">
+		<th>###LABEL_AUTHOR###</th>
+		<th>###LABEL_MESSAGE###</th>
+	</tr>
+	<!-- ###TITLEROW### -->
+	<!-- ###DATAROW### -->
+	<tr class="forum-tr###ALTID###">
+		<td class="userInfo" width="113" valign="top">
+			<div>###AUTHOR###</div>
+			<div>###AUTHOR_IMAGE###</div>
+		</td>
+		<td>
+			<div>
+				<div class="postedDate">###DATETIME###</div>
+				<div class="post">###MESSAGE###</div>
+			</div>
+		</td>
+	</tr>
+	<!-- ###DATAROW### -->
+</table>
+<div class="breadCrumb">
+	###BREADCRUMB###
+</div>
+<div style="float:right;">
+	###PAGEBROWSER###
+</div>
+<!-- ###REPLYBOX### -->
+<div class="replyBox">
+	<form id="tx-simpleforum-pi1-replybox" action="###ACTION_URL###" name="tx_simpleforum_pi1[reply]" method="post">
+		<h3>###LABEL_REPLYTO###: ###THREADTITLE###</h3>
+		<input type="hidden" name="tx_simpleforum_pi1[reply][fid]" value="###FID###" id="ForumID" />
+		<input type="hidden" name="tx_simpleforum_pi1[reply][tid]" value="###TID###" id="ThreadID" />
+		<textarea id="tx-simpleforum-pi1-reply-message" name="tx_simpleforum_pi1[reply][message]" cols="90" rows="8">###V_MESSAGE###</textarea><br />
+		<input type="submit" name="tx_simpleforum_pi1[reply][submit]" value="###L_SUBMIT###" />
+	</form>
+</div>
+<!-- ###REPLYBOX### -->
+<!-- ###MESSAGELIST### -->
+
+<!-- ###NEWTHREAD### -->
+<div class="replyBox">
+	<form id="tx-simpleforum-pi1-replybox" action="###ACTION_URL###" name="tx_simpleforum_pi1[reply]" method="post">
+		<h3>###L_NEW_THREAD###</h3>
+		<input type="hidden" name="tx_simpleforum_pi1[reply][fid]" value="###FID###" id="ForumID" />
+		<label for="tx-simpleforum-pi1-reply-title">###L_THREADTITLE###:</label> <input type="text" value="###V_THREADTITLE###" name="tx_simpleforum_pi1[reply][title]" id="tx-simpleforum-pi1-reply-title" /><br />
+		<textarea id="tx-simpleforum-pi1-reply-message" name="tx_simpleforum_pi1[reply][message]" cols="90" rows="8">###V_MESSAGE###</textarea><br />
+		<input type="submit" name="tx_simpleforum_pi1[reply][submit]" value="###L_SUBMIT###" />
+	</form>
+</div>
+<!-- ###NEWTHREAD### -->

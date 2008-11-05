@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<T3locallang>
+	<meta type="array">
+		<type>module</type>
+		<description>Language labels for plugin &quot;tx_simpleforum_pi1&quot;</description>
+	</meta>
+	<data type="array">
+		<languageKey index="default" type="array">
+			<label index="L_ThreadNumber">Threads</label>
+			<label index="L_LastPost">Last Post</label>
+			<label index="L_Topic">Topic</label>
+			<label index="L_Replys">Replys</label>
+			<label index="L_Author">Author</label>
+			<label index="L_Message">Message</label>
+			<label index="L_Submit">Submit</label>
+			<label index="L_ReplyTo">Reply to</label>
+			<label index="L_ThreadTitle">Title</label>
+			<label index="L_NewThread">Create new thread...</label>
+			<label index="minutes">Minutes</label>
+			<label index="hours">Hours</label>
+			<label index="days">Days</label>
+		</languageKey>
+		<languageKey index="de" type="array">
+			<label index="L_ThreadNumber">Themen</label>
+			<label index="L_LastPost">Letzter Post</label>
+			<label index="L_Topic">Thema</label>
+			<label index="L_Replys">Antworten</label>
+			<label index="L_Author">Autor</label>
+			<label index="L_Message">Nachricht</label>
+			<label index="L_Submit">Senden</label>
+			<label index="L_ReplyTo">Antworten zu</label>
+			<label index="L_ThreadTitle">Titel</label>
+			<label index="L_NewThread">Neues Thema erstellen...</label>
+			<label index="minutes">Minuten</label>
+			<label index="minutes_single">Minute</label>
+			<label index="hours">Stunden</label>
+			<label index="hours_single">Stunde</label>
+			<label index="days">Tagen</label>
+			<label index="days_single">Tag</label>
+			<label index="lastmod_pre">vor</label>
+		</languageKey>
+	</data>
+</T3locallang>

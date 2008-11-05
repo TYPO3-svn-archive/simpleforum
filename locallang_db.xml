@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<T3locallang>
+	<meta type="array">
+		<type>database</type>
+		<description>Language labels for database tables/fields belonging to extension 'simpleforum'</description>
+	</meta>
+	<data type="array">
+		<languageKey index="default" type="array">
+			<label index="tx_simpleforum_forums">Forums</label>
+			<label index="tx_simpleforum_forums.topic">Topic</label>
+			<label index="tx_simpleforum_forums.description">Short Description</label>
+			<label index="tx_simpleforum_threads">Forumtopics</label>
+			<label index="tx_simpleforum_threads.fid">Forum</label>
+			<label index="tx_simpleforum_threads.topic">Topic</label>
+			<label index="tx_simpleforum_threads.author">Author</label>
+			<label index="tx_simpleforum_threads.locked">Locked</label>
+			<label index="tx_simpleforum_threads.usergroup">Usergroup</label>
+			<label index="tx_simpleforum_posts">Forumposts</label>
+			<label index="tx_simpleforum_posts.tid">Thread</label>
+			<label index="tx_simpleforum_posts.author">Author</label>
+			<label index="tx_simpleforum_posts.message">Message</label>
+			<label index="tx_simpleforum_posts.approved">Approved</label>
+			<label index="tx_simpleforum_posts.remote_addr">IP Address</label>
+			<label index="tt_content.list_type_pi1">Forum</label>
+		</languageKey>
+		<languageKey index="de" type="array">
+			<label index="tx_simpleforum_forums">Foren</label>
+			<label index="tx_simpleforum_forums.topic">Thema</label>
+			<label index="tx_simpleforum_forums.description">kurze Beschreibung</label>
+			<label index="tx_simpleforum_threads">Forumthemen</label>
+			<label index="tx_simpleforum_threads.fid">Forum</label>
+			<label index="tx_simpleforum_threads.topic">Thema</label>
+			<label index="tx_simpleforum_threads.author">Autor</label>
+			<label index="tx_simpleforum_threads.locked">Geschlossen</label>
+			<label index="tx_simpleforum_threads.usergroup">Benutzergruppe</label>
+			<label index="tx_simpleforum_posts">Forumbeiträge</label>
+			<label index="tx_simpleforum_posts.tid">Thema</label>
+			<label index="tx_simpleforum_posts.author">Autor</label>
+			<label index="tx_simpleforum_posts.message">Nachricht</label>
+			<label index="tx_simpleforum_posts.approved">Freigeschaltet</label>
+			<label index="tx_simpleforum_posts.remote_addr">IP-Adresse</label>
+			<label index="tt_content.list_type_pi1">Forum</label>
+		</languageKey>
+	</data>
+</T3locallang>

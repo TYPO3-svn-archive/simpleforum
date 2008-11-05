@@ -1,0 +1,8 @@
+plugin.tx_simpleforum_pi1 {
+	title = d16.de - Forum
+	rpp = 20
+	strftime = %a %d. %b %Y - %H:%M h
+	profilePID = 1
+	storagePid = 0
+	preventDuplicatePosts = 1
+}
