@@ -96,6 +96,9 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 	function init() {
 		$this->pi_setPiVarDefaults();
 		$this->pi_loadLL();
+		
+		$this->pi_initPIflexForm();
+		$this->conf['introtext'] = $this->pi_getFFvalue($this->cObj->data['pi_flexform'], 'introtext', 'sDEF');
 
 		$this->ts = mktime();
 		$this->templateCode = $this->cObj->fileResource('EXT:simpleforum/res/template.tmpl');
@@ -138,7 +141,7 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 				array($this->prefixId.'[fid]'=>$forum['uid'])
 			);
 
-			$marker = array(
+			$marker = array (
 				'###ALTID###' => $i,
 				'###FORUM_TITLE###' => $linkForum,
 				'###FORUM_DESCRIPTION###' => $forum['description'],
@@ -154,6 +157,11 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 
 		$content = $this->cObj->substituteSubpart($template, '###TITLEROW###', $temp['titleRow']);
 		$content = $this->cObj->substituteSubpart($content, '###DATAROW###', implode('', $temp['dataRows']));
+		
+		$marker = array(
+			'###INTROTEXT###' => '<p class="introtext">'.$this->conf['introtext'].'</p>',		
+		);
+		$content = $this->cObj->substituteMarkerArray($content, $marker);
 		return $content;
 	}
 
@@ -218,7 +226,7 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 	function posts($threadId) {
 		$template = $this->cObj->getSubpart($this->templateCode, '###MESSAGELIST###');
 
-		$where = 'approved=1 hidden=0 AND deleted=0 AND tid='.$threadId;
+		$where = 'approved=1 AND hidden=0 AND deleted=0 AND tid='.$threadId;
 		$posts = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,tstamp,crdate,author,message,approved',
 			'tx_simpleforum_posts', $where, 'crdate ASC');
 		if (!is_array($posts)) $posts = array();
@@ -343,7 +351,8 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 			$refindex = t3lib_div::makeInstance('t3lib_refindex');
 			/* @var $refindex t3lib_refindex */
 			$refindex->updateRefIndexTable('tx_simpleforum_posts', $postUid);
-			$refindex->updateRefIndexTable('tx_simpleforum_posts', intVal($this->piVars['reply']['tid']));
+			$refindex->updateRefIndexTable('tx_simpleforum_threads', intVal($this->piVars['reply']['tid']));
+			$refindex->updateRefIndexTable('tx_simpleforum_forums', intVal($this->piVars['reply']['fid']));
 			$this->thread_update(intVal($this->piVars['reply']['tid']));
 			$this->forum_update(intVal($this->piVars['reply']['fid']));
 		}
