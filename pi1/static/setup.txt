@@ -6,4 +6,7 @@ plugin.tx_simpleforum_pi1 {
 	profileParam = tx_feuser_pi1[uid]
 	storagePid = 0
 	preventDuplicatePosts = 1
+	lockedIcon = EXT:simpleforum/res/lock.png
+	adminIcon = EXT:simpleforum/res/cog.png
+	adminGroup = 4
 }

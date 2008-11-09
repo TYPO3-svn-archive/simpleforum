@@ -1,13 +1,13 @@
 <?php
 if (!defined ('TYPO3_MODE')) 	die ('Access denied.');
 
-$TCA["tx_simpleforum_forums"] = array (
-	"ctrl" => $TCA["tx_simpleforum_forums"]["ctrl"],
-	"interface" => array (
-		"showRecordFieldList" => "hidden,starttime,endtime,topic,description,postnumber,lastposttime,lastpostuser"
+$TCA['tx_simpleforum_forums'] = array (
+	'ctrl' => $TCA['tx_simpleforum_forums']['ctrl'],
+	'interface' => array (
+		'showRecordFieldList' => 'hidden,starttime,endtime,topic,description,postnumber,lastposttime,lastpostuser'
 	),
-	"feInterface" => $TCA["tx_simpleforum_forums"]["feInterface"],
-	"columns" => array (
+	'feInterface' => $TCA['tx_simpleforum_forums']['feInterface'],
+	'columns' => array (
 		'hidden' => array (
 			'exclude' => 1,
 			'label'   => 'LLL:EXT:lang/locallang_general.xml:LGL.hidden',
@@ -44,61 +44,61 @@ $TCA["tx_simpleforum_forums"] = array (
 				)
 			)
 		),
-		"topic" => Array (
-			"exclude" => 1,
-			"label" => "LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_forums.topic",
-			"config" => Array (
-				"type" => "input",
-				"size" => "30",
-				"eval" => "required",
+		'topic' => Array (
+			'exclude' => 1,
+			'label' => 'LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_forums.topic',
+			'config' => Array (
+				'type' => 'input',
+				'size' => '30',
+				'eval' => 'required',
 			)
 		),
-		"description" => Array (
-			"exclude" => 1,
-			"label" => "LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_forums.description",
-			"config" => Array (
-				"type" => "input",
-				"size" => "30",
+		'description' => Array (
+			'exclude' => 1,
+			'label' => 'LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_forums.description',
+			'config' => Array (
+				'type' => 'input',
+				'size' => '30',
 			)
 		),
-		"postnumber" => Array (
-			"config" => Array (
-				"type" => "passthrough",
+		'threadnumber' => Array (
+			'config' => Array (
+				'type' => 'passthrough',
 			)
 		),
-		"lastposttime" => Array (
-			"config" => Array (
-				"type" => "passthrough",
+		'lastpost' => Array (
+			'config' => Array (
+				'type' => 'passthrough',
 			)
 		),
-		"lastpostuser" => Array (
-			"config" => Array (
-				"type" => "passthrough",
+		'lastpostuser' => Array (
+			'config' => Array (
+				'type' => 'passthrough',
 			)
 		),
-		"lastpostusername" => Array (
-			"config" => Array (
-				"type" => "passthrough",
+		'lastpostusername' => Array (
+			'config' => Array (
+				'type' => 'passthrough',
 			)
 		),
 	),
-	"types" => array (
-		"0" => array("showitem" => "hidden;;1;;1-1-1, topic, description, postnumber, lastposttime, lastpostuser, lastpostusername")
+	'types' => array (
+		'0' => array('showitem' => 'hidden;;1;;1-1-1, topic, description, threadnumber, lastpost, lastpostuser, lastpostusername')
 	),
-	"palettes" => array (
-		"1" => array("showitem" => "starttime, endtime")
+	'palettes' => array (
+		'1' => array('showitem' => 'starttime, endtime')
 	)
 );
 
 
 
-$TCA["tx_simpleforum_threads"] = array (
-	"ctrl" => $TCA["tx_simpleforum_threads"]["ctrl"],
-	"interface" => array (
-		"showRecordFieldList" => "hidden,starttime,endtime,fid,topic,replysnumber,replyslast,replyslastname,replyslastuid,authorname,author,locked,usergroup"
+$TCA['tx_simpleforum_threads'] = array (
+	'ctrl' => $TCA['tx_simpleforum_threads']['ctrl'],
+	'interface' => array (
+		'showRecordFieldList' => 'hidden,starttime,endtime,fid,topic,replysnumber,replyslast,replyslastname,replyslastuid,authorname,author,locked,usergroup'
 	),
-	"feInterface" => $TCA["tx_simpleforum_threads"]["feInterface"],
-	"columns" => array (
+	'feInterface' => $TCA['tx_simpleforum_threads']['feInterface'],
+	'columns' => array (
 		'hidden' => array (
 			'exclude' => 1,
 			'label'   => 'LLL:EXT:lang/locallang_general.xml:LGL.hidden',
@@ -135,101 +135,101 @@ $TCA["tx_simpleforum_threads"] = array (
 				)
 			)
 		),
-		"fid" => Array (
-			"exclude" => 1,
-			"label" => "LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_threads.fid",
-			"config" => Array (
-				"type" => "group",
-				"internal_type" => "db",
-				"allowed" => "tx_simpleforum_forums",
-				"size" => 1,
-				"minitems" => 0,
-				"maxitems" => 1,
+		'fid' => Array (
+			'exclude' => 1,
+			'label' => 'LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_threads.fid',
+			'config' => Array (
+				'type' => 'group',
+				'internal_type' => 'db',
+				'allowed' => 'tx_simpleforum_forums',
+				'size' => 1,
+				'minitems' => 0,
+				'maxitems' => 1,
 			)
 		),
-		"topic" => Array (
-			"exclude" => 1,
-			"label" => "LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_threads.topic",
-			"config" => Array (
-				"type" => "input",
-				"size" => "30",
-				"eval" => "required",
+		'topic' => Array (
+			'exclude' => 1,
+			'label' => 'LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_threads.topic',
+			'config' => Array (
+				'type' => 'input',
+				'size' => '30',
+				'eval' => 'required',
 			)
 		),
-		"replysnumber" => Array (
-			"config" => Array (
-				"type" => "passthrough",
+		'postnumber' => Array (
+			'config' => Array (
+				'type' => 'passthrough',
 			)
 		),
-		"replyslast" => Array (
-			"config" => Array (
-				"type" => "passthrough",
+		'lastpost' => Array (
+			'config' => Array (
+				'type' => 'passthrough',
 			)
 		),
-		"replyslastname" => Array (
-			"config" => Array (
-				"type" => "passthrough",
+		'lastpostusername' => Array (
+			'config' => Array (
+				'type' => 'passthrough',
 			)
 		),
-		"replyslastuid" => Array (
-			"config" => Array (
-				"type" => "passthrough",
+		'lastpostuser' => Array (
+			'config' => Array (
+				'type' => 'passthrough',
 			)
 		),
-		"authorname" => Array (
-			"config" => Array (
-				"type" => "passthrough",
+		'authorname' => Array (
+			'config' => Array (
+				'type' => 'passthrough',
 			)
 		),
-		"author" => Array (
-			"exclude" => 1,
-			"label" => "LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_threads.author",
-			"config" => Array (
-				"type" => "group",
-				"internal_type" => "db",
-				"allowed" => "fe_users",
-				"size" => 1,
-				"minitems" => 0,
-				"maxitems" => 1,
+		'author' => Array (
+			'exclude' => 1,
+			'label' => 'LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_threads.author',
+			'config' => Array (
+				'type' => 'group',
+				'internal_type' => 'db',
+				'allowed' => 'fe_users',
+				'size' => 1,
+				'minitems' => 0,
+				'maxitems' => 1,
 			)
 		),
-		"locked" => Array (
-			"exclude" => 1,
-			"label" => "LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_threads.locked",
-			"config" => Array (
-				"type" => "check",
+		'locked' => Array (
+			'exclude' => 1,
+			'label' => 'LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_threads.locked',
+			'config' => Array (
+				'type' => 'check',
 			)
 		),
-		"usergroup" => Array (
-			"exclude" => 1,
-			"label" => "LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_threads.usergroup",
-			"config" => Array (
-				"type" => "group",
-				"internal_type" => "db",
-				"allowed" => "fe_groups",
-				"size" => 5,
-				"minitems" => 0,
-				"maxitems" => 10,
+		'usergroup' => Array (
+			'exclude' => 1,
+			'label' => 'LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_threads.usergroup',
+			'config' => Array (
+				'type' => 'group',
+				'internal_type' => 'db',
+				'allowed' => 'fe_groups',
+				'size' => 5,
+				'minitems' => 0,
+				'maxitems' => 10,
 			)
 		),
 	),
-	"types" => array (
-		"0" => array("showitem" => "hidden;;1;;1-1-1, fid, topic, replysnumber, replyslast, replyslastname, replyslastuid, authorname, author, locked, usergroup")
+	'types' => array (
+		'0' => array('showitem' => 'hidden;;1;;1-1-1, fid, topic, replysnumber, replyslast, replyslastname, replyslastuid, authorname, author, locked, usergroup')
 	),
-	"palettes" => array (
-		"1" => array("showitem" => "starttime, endtime")
+	'palettes' => array (
+		'1' => array('showitem' => 'starttime, endtime')
 	)
 );
 
 
 
-$TCA["tx_simpleforum_posts"] = array (
-	"ctrl" => $TCA["tx_simpleforum_posts"]["ctrl"],
-	"interface" => array (
-		"showRecordFieldList" => "hidden,tid,author,message,approved"
+$TCA['tx_simpleforum_posts'] = array (
+	'ctrl' => $TCA['tx_simpleforum_posts']['ctrl'],
+	'interface' => array (
+		'showRecordFieldList' => 'hidden,tid,author,message,approved'
 	),
-	"feInterface" => $TCA["tx_simpleforum_posts"]["feInterface"],
-	"columns" => array (
+	'feInterface' => $TCA['tx_simpleforum_posts']['feInterface'],
+	'columns' => array (
 		'hidden' => array (
 			'exclude' => 1,
 			'label'   => 'LLL:EXT:lang/locallang_general.xml:LGL.hidden',
@@ -238,66 +238,66 @@ $TCA["tx_simpleforum_posts"] = array (
 				'default' => '0'
 			)
 		),
-		"tid" => Array (
-			"exclude" => 1,
-			"label" => "LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_posts.tid",
-			"config" => Array (
-				"type" => "group",
-				"internal_type" => "db",
-				"allowed" => "tx_simpleforum_threads",
-				"size" => 1,
-				"minitems" => 0,
-				"maxitems" => 1,
+		'tid' => Array (
+			'exclude' => 1,
+			'label' => 'LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_posts.tid',
+			'config' => Array (
+				'type' => 'group',
+				'internal_type' => 'db',
+				'allowed' => 'tx_simpleforum_threads',
+				'size' => 1,
+				'minitems' => 0,
+				'maxitems' => 1,
 			)
 		),
-		"author" => Array (
-			"exclude" => 1,
-			"label" => "LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_posts.author",
-			"config" => Array (
-				"type" => "group",
-				"internal_type" => "db",
-				"allowed" => "fe_users",
-				"size" => 1,
-				"minitems" => 0,
-				"maxitems" => 1,
+		'author' => Array (
+			'exclude' => 1,
+			'label' => 'LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_posts.author',
+			'config' => Array (
+				'type' => 'group',
+				'internal_type' => 'db',
+				'allowed' => 'fe_users',
+				'size' => 1,
+				'minitems' => 0,
+				'maxitems' => 1,
 			)
 		),
-		"message" => Array (
-			"exclude" => 1,
-			"label" => "LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_posts.message",
-			"config" => Array (
-				"type" => "text",
-				"cols" => "30",
-				"rows" => "5",
+		'message' => Array (
+			'exclude' => 1,
+			'label' => 'LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_posts.message',
+			'config' => Array (
+				'type' => 'text',
+				'cols' => '30',
+				'rows' => '5',
 			)
 		),
-		"approved" => Array (
-			"exclude" => 1,
-			"label" => "LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_posts.approved",
-			"config" => Array (
-				"type" => "check",
-				"default" => 1,
+		'approved' => Array (
+			'exclude' => 1,
+			'label' => 'LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_posts.approved',
+			'config' => Array (
+				'type' => 'check',
+				'default' => 1,
 			)
 		),
 		'remote_addr' => array(
-			'label' => 'LLL:EXT:comments/locallang_db.xml:tx_simpleforum_posts.remote_addr',
+			'label' => 'LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_posts.remote_addr',
 			'config' => array(
 				'type' => 'input',
 				'eval' => 'trim,required,is_in',
 				'is_in' => '0123456789.',
 			),
 		),
-		"doublepostcheck" => Array (
-			"config" => Array (
-				"type" => "passthrough",
+		'doublepostcheck' => Array (
+			'config' => Array (
+				'type' => 'passthrough',
 			)
 		),
 	),
-	"types" => array (
-		"0" => array("showitem" => "hidden;;1;;1-1-1, tid, author, message, remote_addr, approved")
+	'types' => array (
+		'0' => array('showitem' => 'hidden;;1;;1-1-1, tid, author, message, remote_addr, approved')
 	),
-	"palettes" => array (
-		"1" => array("showitem" => "")
+	'palettes' => array (
+		'1' => array('showitem' => '')
 	)
 );
 ?>

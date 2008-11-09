@@ -48,7 +48,7 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 	 *
 	 * @param	string		$content: The PlugIn content
 	 * @param	array		$conf: The PlugIn configuration
-	 * @return	The content that is displayed on the website
+	 * @return	string		The content that is displayed on the website
 	 */
 	function main($content,$conf)	{
 		$this->conf=$conf;
@@ -61,22 +61,7 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 
 		//UPDATE extension "cache"
 		if ($this->piVars['updateAll'] == 1) {
-
-			$forums = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid, crdate, topic, description, postnumber, lastposttime, lastpostuser, lastpostusername',
-				'tx_simpleforum_forums', 'hidden=0 AND deleted=0');
-			if (!is_array($forums)) $forums = array();
-
-			foreach ($forums as $forum) {
-				$threads = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,tstamp,crdate,fid,topic,replysnumber,replyslast,replyslastname,replyslastuid,authorname,author,locked,usergroup',
-					'tx_simpleforum_threads', 'hidden=0 AND deleted=0', 'replyslast DESC');
-				if (!is_array($threads)) $threads = array();
-
-				foreach ($threads as $thread) {
-					$this->thread_update($thread['uid']);
-				}
-
-				$this->forum_update($forum['uid']);
-			}
+			$this->updateAll();
 		}
 
 		if (empty($this->piVars['tid']) && empty($this->piVars['fid'])) {
@@ -93,16 +78,49 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		return $this->pi_wrapInBaseClass($content);
 	}
 
+	/**
+	 * Updates extensin internal cache
+	 *
+	 * @return	void
+	 */
+	function updateAll() {
+		$forums = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid, crdate, topic, description, threadnumber, lastpost, lastpostuser, lastpostusername',
+				'tx_simpleforum_forums', 'hidden=0 AND deleted=0');
+		if (!is_array($forums)) $forums = array();
+
+		foreach ($forums as $forum) {
+			$threads = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,tstamp,crdate,fid,topic,postnumber,lastpost,lastpostusername,lastpostuser,authorname,author,locked,usergroup',
+				'tx_simpleforum_threads', 'hidden=0 AND deleted=0', 'lastpost DESC');
+			if (!is_array($threads)) $threads = array();
+
+			foreach ($threads as $thread) {
+				$this->thread_update($thread['uid']);
+			}
+
+			$this->forum_update($forum['uid']);
+		}
+	}
+
+	/**
+	 * Initiates configuration values ans set additionalHeaderData
+	 *
+	 * @return	void
+	 */
 	function init() {
 		$this->pi_setPiVarDefaults();
 		$this->pi_loadLL();
-		
+
 		$this->pi_initPIflexForm();
 		$this->conf['introtext'] = $this->pi_getFFvalue($this->cObj->data['pi_flexform'], 'introtext', 'sDEF');
 
 		$this->ts = mktime();
 		$this->templateCode = $this->cObj->fileResource('EXT:simpleforum/res/template.tmpl');
-
+		
+		//Replace 'EXT:simpleforum/' in conf
+		$list = array('lockedIcon', 'adminIcon');
+		foreach ($list as $l) {
+			$this->conf[$l] = str_replace('EXT:simpleforum/', t3lib_extMgm::siteRelPath('simpleforum'), $this->conf[$l]);
+		}
 
 		$key = 'tx_simpleforum_' . md5($this->templateCode);
 		if (!isset($GLOBALS['TSFE']->additionalHeaderData[$key])) {
@@ -114,11 +132,16 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		}
 	}
 
+	/**
+	 * Returns forums
+	 *
+	 * @return	string		HTML output
+	 */
 	function forums() {
 		$template = $this->cObj->getSubpart($this->templateCode, '###FORUMLIST###');
 
 		$where = 'hidden=0 AND deleted=0 AND (starttime<'.$this->ts.' OR starttime = 0) AND (endtime>'.$this->ts.' OR endtime=0)';
-		$forums = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid, crdate, topic, description, postnumber, lastposttime, lastpostuser, lastpostusername',
+		$forums = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid, crdate, topic, description, threadnumber, lastpost, lastpostuser, lastpostusername',
 			'tx_simpleforum_forums', $where, 'sorting');
 		if (!is_array($forums)) $forums = array();
 
@@ -145,8 +168,8 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 				'###ALTID###' => $i,
 				'###FORUM_TITLE###' => $linkForum,
 				'###FORUM_DESCRIPTION###' => $forum['description'],
-				'###THREADNUMBER###' => intVal($forum['postnumber']),
-				'###LASTPOST_DATETIME###' => $this->lastModString($forum['lastposttime']),
+				'###THREADNUMBER###' => intVal($forum['threadnumber']),
+				'###LASTPOST_DATETIME###' => $this->lastModString($forum['lastpost']),
 				'###LASTPOST_USER###' => $linkUser,
 			);
 
@@ -157,20 +180,26 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 
 		$content = $this->cObj->substituteSubpart($template, '###TITLEROW###', $temp['titleRow']);
 		$content = $this->cObj->substituteSubpart($content, '###DATAROW###', implode('', $temp['dataRows']));
-		
+
 		$marker = array(
-			'###INTROTEXT###' => '<p class="introtext">'.$this->conf['introtext'].'</p>',		
+			'###INTROTEXT###' => '<p class="introtext">'.$this->conf['introtext'].'</p>',
 		);
 		$content = $this->cObj->substituteMarkerArray($content, $marker);
 		return $content;
 	}
 
+	/**
+	 * Returns threadlist
+	 *
+	 * @param	integer		$forumId: id of forum to be shown
+	 * @return	string		HTML output
+	 */
 	function threads($forumId) {
 		$template = $this->cObj->getSubpart($this->templateCode, '###THREADLIST###');
 
 		$where = 'hidden=0 AND deleted=0 AND (starttime<'.$this->ts.' OR starttime = 0) AND (endtime>'.$this->ts.' OR endtime=0) AND fid='.$forumId;
-		$threads = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,tstamp,crdate,fid,topic,replysnumber,replyslast,replyslastname,replyslastuid,authorname,author,locked,usergroup',
-			'tx_simpleforum_threads', $where, 'replyslast DESC');
+		$threads = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,tstamp,crdate,fid,topic,postnumber,lastpost,lastpostusername,lastpostuser,authorname,author,locked,usergroup',
+			'tx_simpleforum_threads', $where, 'lastpost DESC');
 		if (!is_array($threads)) $threads = array();
 
 		$forum = $this->data_forum($forumId);
@@ -193,26 +222,43 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		$temp['dataTemplate'] = $this->cObj->getSubpart($template, '###DATAROW###');
 		$i = 1;
 		foreach ($threads as $thread) {
-			$linkUser = $this->linkToUser($thread['replyslastuid'],$thread['replyslastname']);
+			if (intVal($thread['postnumber']) == 0) continue;
+			$linkUser = $this->linkToUser($thread['lastpostuser'],$thread['lastpostusername']);
 			$linkAuthor = $this->linkToUser($thread['author'],$thread['authorname']);
 
 			$linkThread = $this->pi_linkToPage(
-			$thread['topic'],
-			$GLOBALS['TSFE']->id,'',
-			array($this->prefixId.'[tid]'=>$thread['uid'])
+				$thread['topic'],
+				$GLOBALS['TSFE']->id,'',
+				array($this->prefixId.'[tid]'=>$thread['uid'])
 			);
+			$thread['postnumber'] = intVal($thread['postnumber']);
+			if ($thread['postnumber'] > 0) $thread['postnumber']--;
+			
+			$specialIcon = '';
+			if (intVal($thread['locked']) == 1) {
+				$specialIcon = '<img src="' . $this->conf['lockedIcon'] . '" />';
+			}
 
 			$markerSub = array(
 				'###ALTID###' => $i,
-				'###SPECIALICON###' => '',
+				'###SPECIALICON###' => $specialIcon,
 				'###THREADTITLE###' => $linkThread,
 				'###AUTHOR###' => $linkAuthor,
-				'###POSTSNUMBER###' => intVal($thread['replysnumber']),
-				'###LASTPOST_DATETIME###' => $this->lastModString($thread['replyslast']),
+				'###POSTSNUMBER###' => $thread['postnumber'],
+				'###LASTPOST_DATETIME###' => $this->lastModString($thread['lastpost']),
 				'###LASTPOST_USER###' => $linkUser,
 			);
 
-			$temp['dataRows'][] = $this->cObj->substituteMarkerArray($temp['dataTemplate'], $markerSub);
+			$rowContent = $this->cObj->substituteMarkerArray($temp['dataTemplate'], $markerSub);
+			
+			$adminMenu = $this->adminMenu(
+				array(
+					'template' => $this->cObj->getSubpart($temp['dataTemplate'], '###ADMINMENU###'),
+				)
+			);
+			$rowContent = $this->cObj->substituteSubpart($rowContent, '###ADMINMENU###', $adminMenu);
+			
+			$temp['dataRows'][] = $rowContent;
 			$i = ($i == 1 ? 2 : 1);
 		}
 		if (!is_array($temp['dataRows'])) $temp['dataRows'] = array();
@@ -223,6 +269,12 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		return $content;
 	}
 
+	/**
+	 * Returns post list
+	 *
+	 * @param	integer		$threadId: id of thread to be shown
+	 * @return	string		HTML output
+	 */
 	function posts($threadId) {
 		$template = $this->cObj->getSubpart($this->templateCode, '###MESSAGELIST###');
 
@@ -267,7 +319,16 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 				'###MESSAGE###' => $message,
 			);
 
-			$temp['dataRows'][] = $this->cObj->substituteMarkerArray($temp['dataTemplate'], $markerSub);
+			$rowContent = $this->cObj->substituteMarkerArray($temp['dataTemplate'], $markerSub);
+			
+			$adminMenu = $this->adminMenu(
+				array(
+					'template' => $this->cObj->getSubpart($temp['dataTemplate'], '###ADMINMENU###'),
+				)
+			);
+			$rowContent = $this->cObj->substituteSubpart($rowContent, '###ADMINMENU###', $adminMenu);
+			
+			$temp['dataRows'][] = $rowContent;
 			$i = ($i == 1 ? 2 : 1);
 		}
 		if (!is_array($temp['dataRows'])) $temp['dataRows'] = array();
@@ -279,6 +340,12 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		return $content;
 	}
 
+	/**
+	 * Returns form. The type of the form is based on the conf array
+	 *
+	 * @param	array		$conf: array with configuration
+	 * @return	string		HTML output
+	 */
 	function form($conf = array()) {
 		$content = '';
 		if ($conf['tid']) {
@@ -293,13 +360,12 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 
 		if ($GLOBALS['TSFE']->loginUser && $addClause) {
 
-
 			$actionLink = $this->cObj->typoLink_URL(array(
 				'parameter' => $GLOBALS['TSFE']->id,
 				'addQueryString' => 1,
 				'addQueryString.' => array(
 					'exclude' => 'cHash,no_cache',
-			),
+				),
 				'additionalParams' => '&no_cache=1',
 				'useCacheHash' => false,
 			));
@@ -397,6 +463,12 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		return ($errorCount == 0);
 	}
 
+	
+	/**
+	 * Creates record array for new thread
+	 *
+	 * @return	array		new thread record
+	 */
 	function thread_createRecord() {
 		if (isset($this->piVars['reply']['title'])) {
 			// Create record
@@ -404,10 +476,10 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 				'pid' => intVal($this->conf['storagePid']),
 				'fid' => intVal($this->piVars['reply']['fid']),
 				'topic' => $this->piVars['reply']['title'],
-				'replysnumber' => 0,
-				'replyslast' => time(),
-				'replyslastname' => $GLOBALS['TSFE']->fe_user->user['username'],
-				'replyslastuid' => $GLOBALS['TSFE']->fe_user->user['uid'],
+				'postnumber' => 0,
+				'lastpost' => time(),
+				'lastpostusername' => $GLOBALS['TSFE']->fe_user->user['username'],
+				'lastpostuser' => $GLOBALS['TSFE']->fe_user->user['uid'],
 				'authorname' => $GLOBALS['TSFE']->fe_user->user['username'],
 				'author' => $GLOBALS['TSFE']->fe_user->user['uid'],
 				'crdate' => time(),
@@ -419,6 +491,11 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		}
 	}
 
+	/**
+	 * Creates record array for new post
+	 *
+	 * @return	array		new post array
+	 */
 	function post_createRecord() {
 		$isApproved = 1;
 
@@ -450,9 +527,15 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		}
 	}
 
-
+	
+	/**
+	 * Updates cached information of a single thread
+	 *
+	 * @param	integer		$threadId: id of thread to be updated
+	 * @return	void
+	 */
 	function thread_update($threadId) {
-		$where = 'hidden=0 AND deleted=0 AND tid='.intVal($threadId);
+		$where = 'hidden=0 AND deleted=0 AND approved=1 AND tid='.intVal($threadId);
 		$posts = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,crdate,author',
 			'tx_simpleforum_posts', $where, 'crdate DESC');
 
@@ -460,33 +543,44 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 			$user = $this->data_user($posts[0]['author']);
 
 			$record = array(
-				'replysnumber' => (count($posts)-1),
-				'replyslast' => $posts[0]['crdate'],
-				'replyslastname' => $user['username'],
-				'replyslastuid' => $user['uid'],
+				'postnumber' => count($posts),
+				'lastpost' => $posts[0]['crdate'],
+				'lastpostusername' => $user['username'],
+				'lastpostuser' => $user['uid'],
 			);
 			$GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_threads', 'uid='.intVal($threadId),$record);
 		}
 	}
 
+	/**
+	 * Updates cached information of a single forum
+	 *
+	 * @param	integer		$forumId: id of forum to be updated
+	 * @return	void
+	 */
 	function forum_update($forumId) {
-		$where = 'hidden=0 AND deleted=0 AND fid='.intVal($forumId);
-		$threads = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid, replysnumber, replyslast, replyslastname, replyslastuid',
+		$where = 'hidden=0 AND deleted=0 AND postnumber>0 AND fid='.intVal($forumId);
+		$threads = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid, postnumber, lastpost, lastpostusername, lastpostuser',
 			'tx_simpleforum_threads', $where, 'replyslast DESC');
 
 		if (is_array($threads)) {
 			$record = array(
-				'postnumber' => count($threads),
-				'lastposttime' => $threads[0]['replyslast'],
-				'lastpostusername' => $threads[0]['replyslastname'],
-				'lastpostuser' => $threads[0]['replyslastuid'],
+				'threadnumber' => count($threads),
+				'lastpost' => $threads[0]['lastpost'],
+				'lastpostusername' => $threads[0]['lastpostusername'],
+				'lastpostuser' => $threads[0]['lastpostuser'],
 			);
 			$GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_forums', 'uid='.intVal($forumId),$record);
 		}
 	}
 
-
-
+	
+	/**
+	 * Returns formarted string with 'last modified date'
+	 *
+	 * @param	integer		$lastModTs: timestamp on which calculation is based
+	 * @return	string		formarted timespan/date
+	 */
 	function lastModString($lastModTs) {
 		$lastModTs = intVal($lastModTs);
 		$diff = time() - $lastModTs;
@@ -510,6 +604,12 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		return $content;
 	}
 
+	/**
+	 * Returns breadcrumb menu (forum internal)
+	 *
+	 * @param	array		$conf: array with thread-/forum-id
+	 * @return	string		HTML output
+	 */
 	function breadcrumb($conf) {
 		$temp[] = $this->pi_linkToPage(htmlspecialchars($this->conf['title']),$GLOBALS['TSFE']->id);
 
@@ -525,6 +625,20 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		return $content;
 	}
 
+	function adminMenu($conf=array()) {
+		if (t3lib_div::inList($GLOBALS['TSFE']->fe_user->user['usergroup'], $this->conf['adminGroup'])) {
+			$content = '<img src="' . $this->conf['adminIcon'] . '" />';
+		}
+		return $this->cObj->substituteMarker($conf['template'], '###ADMINICONS###', $content);
+	}
+	
+	/**
+	 * Returns link to a user
+	 *
+	 * @param	integer		$userId: id of user to point at
+	 * @param	string		$username: username (optional)
+	 * @return	string		HTML output
+	 */
 	function linkToUser($userId, $username='') {
 		if ($username == '') {
 			$user = $this->data_user($userId);
@@ -538,6 +652,13 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		return $content;
 	}
 
+	/**
+	 * Returns link to a single forum
+	 *
+	 * @param	integer		$forumId: id of forum
+	 * @param	string		$topic: forum title (optional)
+	 * @return	string		HTML output
+	 */
 	function linkToForum($forumId, $topic='') {
 		if ($topic == '') {
 			$forum = $this->data_forum($forumId);
@@ -551,6 +672,13 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		return $content;
 	}
 
+	/**
+	 * Returns link to a single thread
+	 *
+	 * @param	integer		$threadId: id of thread
+	 * @param	string		$topic: thread title (optional)
+	 * @return	string		HTML output
+	 */
 	function linkToThread($threadId, $topic='') {
 		if ($topic == '') {
 			$thread = $this->data_thread($threadId);
@@ -564,6 +692,15 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		return $content;
 	}
 
+	
+	/**
+	 * Returns data of a single user and caches it at $this->users
+	 * When data of this user is already cached in $this->users this 
+	 * data is taken and no new databasequery is executed.
+	 *
+	 * @param	integer		$userId: id of user
+	 * @return	array		user information
+	 */
 	function data_user($userId) {
 		if (!is_array($this->users[$userId])) {
 			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid,username,name,first_name,last_name,showname,image',
@@ -580,10 +717,18 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		return $user;
 	}
 
+	/**
+	 * Returns data of a single forum and caches it at $this->forums
+	 * When data of this forum is already cached in $this->forums this 
+	 * data is taken and no new databasequery is executed.
+	 *
+	 * @param	integer		$forumId: id of forum
+	 * @return	array		forum information
+	 */
 	function data_forum($forumId) {
 		if (!is_array($this->forums[$forumId])) {
 			$where = 'hidden=0 AND deleted=0 AND (starttime<'.$this->ts.' OR starttime = 0) AND (endtime>'.$this->ts.' OR endtime=0) AND uid='.intVal($forumId);
-			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid, crdate, topic, description, postnumber, lastposttime, lastpostuser, lastpostusername',
+			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid, crdate, topic, description, threadnumber, lastpost, lastpostuser, lastpostusername',
 				'tx_simpleforum_forums', $where);
 			if ($res) {
 				$this->forums[$forumId] = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
@@ -597,10 +742,18 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		return $forum;
 	}
 
+	/**
+	 * Returns data of a single thread and caches it at $this->threads
+	 * When data of this thread is already cached in $this->threads this 
+	 * data is taken and no new databasequery is executed.
+	 *
+	 * @param	integer		$threadId: id of thread
+	 * @return	array		thread information
+	 */
 	function data_thread($threadId) {
 		if (!is_array($this->threads[$threadId])) {
 			$where = 'hidden=0 AND deleted=0 AND (starttime<'.$this->ts.' OR starttime = 0) AND (endtime>'.$this->ts.' OR endtime=0) AND uid='.intVal($threadId);
-			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid,tstamp,crdate,fid,topic,replysnumber,replyslast,replyslastname,replyslastuid,authorname,author,locked,usergroup',
+			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid,tstamp,crdate,fid,topic,postnumber,lastpost,lastpostusername,lastpostuser,authorname,author,locked,usergroup',
 				'tx_simpleforum_threads', $where);
 			if ($res) {
 				$this->threads[$threadId] = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
@@ -614,6 +767,17 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		return $thread;
 	}
 
+	
+	/**
+	 * Generates user image and returns it
+	 *
+	 * @param	string		$image: image name (in folder 'uploads/tx_srfeuserregister/')
+	 * @param	string		$width: image width
+	 * @param	string		$height: image height (if set to '' it is calculated automaticly)
+	 * @param	string]		$altText: text for alt tag
+	 * @param	string		$altIMG: path to alternative image
+	 * @return	string		HTML output
+	 */
 	function generateUserImage($image,$width,$height,$altText,$altIMG='') {
 		if (!($this->cObj)) $this->cObj = t3lib_div::makeInstance('tslib_cObj');
 		if ($height == '') {
