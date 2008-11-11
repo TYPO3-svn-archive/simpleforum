@@ -5,26 +5,21 @@
 <title>Unbenanntes Dokument</title>
 <style type="text/css">
 <!--
+@import url('simpleforum.css');
 * {	padding: 0px; margin: 0px; font-size: 1em; }
 html { font-size: 62.5%; } /* 1em equals 10px */
-body { color: #444444; font-family: 'Trebuchet MS',Verdana,Helvetica,Arial,sans-serif; font-size: 1em; }
-.cm { width: 100px; background-color:#F9F9F9; border: solid thin #ABB2BC; margin: 20px; }
-.cm .row { padding: 1px; vertical-align: middle; }
-.cm .row img { float: left; border: 0 none; }
-.cm .row .label { float: left; padding-left: 7px; }
-.cm .row a { color:#000000; }
-.cm .row a:hover { cursor: pointer; }
+body { color: #444444; font-family: 'Trebuchet MS',Verdana,Helvetica,Arial,sans-serif; font-size: 1em; padding: 20px; }
 .clear { clear:both; }
 -->
 </style>
 </head>
 
 <body>
-<div class="cm">
-<div class="row"><a href="#"><img src="cross.png" width="16" height="16" /><span class="label">Löschen</span></a><div class="clear"></div></div>
-<div class="row"><a href="#"><img src="pencil.png" width="16" height="16" /><span class="label">Bearbeiten</span></a><div class="clear"></div></div>
-<div class="row"><a href="#"><img src="eye.png" width="16" height="16" /><span class="label">Deaktivieren</span></a><div class="clear"></div></div>
-<div class="row"><a href="#"><img src="table_go.png" width="16" height="16" /><span class="label">Verschieben</span></a><div class="clear"></div></div>
+<!-- ###CONTEXTMENU### -->
+<div class="tx-simpleforum-pi1-contextmenu" style="display:none; position:absolute; ###LEFTRIGHT###:20px; top:0px;" id="cm###UID###">
+	<!-- ###ROW### -->
+	<div class="tx-simpleforum-pi1-contextmenu-row"><a href="###URL###"><img src="###ICON###" /><span class="tx-simpleforum-pi1-contextmenu-label">###LABEL###</span></a><div class="clear"></div></div><!-- ###ROW### -->
 </div>
+<!-- ###CONTEXTMENU### -->
 </body>
 </html>

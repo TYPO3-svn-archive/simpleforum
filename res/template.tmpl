@@ -4,6 +4,7 @@
 			SITE_REL_PATH	- path to file relative to web root, ending with slash
 -->
 <link rel="stylesheet" href="###SITE_REL_PATH###res/simpleforum.css" type="text/css" />
+<script type="text/javascript" src="###SITE_REL_PATH###res/simpleforum.js"></script>
 <!-- ###HEADER_ADDITIONS### end -->
 
 <!-- ###FORUMLIST### -->
@@ -55,7 +56,7 @@
 	<!-- ###TITLEROW### -->
 	<!-- ###DATAROW### -->
 	<tr class="forum-tr###ALTID###">
-		<td><span class="threadTitle">###SPECIALICON### ###THREADTITLE###</span><!-- ###ADMINMENU### --><span class="threadAdmin">###ADMINICONS###</span><!-- ###ADMINMENU### --></td>
+		<td><span class="threadTitle">###SPECIALICON### ###THREADTITLE###</span><!-- ###ADMINMENU### --><div class="threadAdmin"><div style="position:relative;">###ADMINICONS###</div></div><!-- ###ADMINMENU### --></td>
 		<td class="forum-tr###ALTID###"><div align="center">###POSTSNUMBER###</div></td>
 		<td class="forum-tr###ALTID###">###AUTHOR###</td>
 		<td class="forum-tr###ALTID###">###LASTPOST_DATETIME### von ###LASTPOST_USER###</td>
@@ -95,7 +96,7 @@
 			<div>
 				<div class="postedDate">###DATETIME###</div>
 				<div class="post">###MESSAGE###</div>
-				<!-- ###ADMINMENU### --><span class="postAdmin">###ADMINICONS###</span><!-- ###ADMINMENU### -->
+				<!-- ###ADMINMENU### --><div class="postAdmin"><div style="position:relative;">###ADMINICONS###</div></div><!-- ###ADMINMENU### -->
 			</div>
 		</td>
 	</tr>
@@ -131,3 +132,35 @@
 	</form>
 </div>
 <!-- ###NEWTHREAD### -->
+
+<!-- ###ALERT### -->
+<div class="tx-simpleforum-pi1-alert">
+	<div class="tx-simpleforum-pi1-alert-content">
+		###MESSAGE###
+	</div>
+	<div class="tx-simpleforum-pi1-alert-links">
+		<span class="tx-simpleforum-pi1-alert-links-yes">###YES###</span>
+		<span class="tx-simpleforum-pi1-alert-links-no">###NO###</span>
+	</div>
+</div>
+<!-- ###ALERT### -->
+
+<!-- ###ALERTFORM### -->
+<div class="tx-simpleforum-pi1-alert">
+	<form method="post" action="###ACTIONURL###">
+	<div class="tx-simpleforum-pi1-alert-content">
+		###MESSAGE###
+		<!-- ####SELECTBOX### -->
+		<select name="tx_simpleforum_pi1[moveselect]">
+			<!-- ###OPTIONS### -->
+			<option value="###VALUE###">###LABEL###</option><!-- ###OPTIONS### -->
+		</select>
+		<!-- ####SELECTBOX### -->
+	</div>
+	<div class="tx-simpleforum-pi1-alert-links">
+		<input type="submit" name="tx_simpleforum_pi1[movesubmit]" value="###L_SUBMIT###" />
+		<span class="tx-simpleforum-pi1-alert-links-no">###NO###</span>
+	</div>
+	</form>
+</div>
+<!-- ###ALERTFORM### -->

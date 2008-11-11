@@ -19,6 +19,20 @@
 			<label index="minutes">Minutes</label>
 			<label index="hours">Hours</label>
 			<label index="days">Days</label>
+			<label index="lastmod_pre"></label>
+			<label index="contextmenu_delete">Delete</label>
+			<label index="contextmenu_edit">Edit</label>
+			<label index="contextmenu_hide">Hide</label>
+			<label index="contextmenu_move">Move</label>
+			<label index="contextmenu_lock">Lock</label>
+			<label index="contextmenu_unlock">Unlock</label>
+			<label index="adminMenuTitle">Admin Menu</label>
+			<label index="yes">Yes</label>
+			<label index="no">No</label>
+			<label index="message_delete">Do really want to delete this entry?</label>
+			<label index="message_hide">Do really want to hide this entry?</label>
+			<label index="message_move_posts">In welches Thema soll dieser (und alle nachfolgenden) Posts verschoben werden?</label>
+			<label index="message_move_thread">In welches Forum soll dieses Thema verschoben werden?</label>
 		</languageKey>
 		<languageKey index="de" type="array">
 			<label index="L_ThreadNumber">Themen</label>
@@ -38,6 +52,19 @@
 			<label index="days">Tagen</label>
 			<label index="days_single">Tag</label>
 			<label index="lastmod_pre">vor</label>
+			<label index="contextmenu_delete">Löschen</label>
+			<label index="contextmenu_edit">Bearbeiten</label>
+			<label index="contextmenu_hide">Ausblenden</label>
+			<label index="contextmenu_move">Verschieben</label>
+			<label index="contextmenu_lock">Sperren</label>
+			<label index="contextmenu_unlock">Freigeben</label>
+			<label index="adminMenuTitle">Admin-Menü</label>
+			<label index="yes">Ja</label>
+			<label index="no">Nein</label>
+			<label index="message_delete">Möchtest du diesen Eintrag wirklich löschen?</label>
+			<label index="message_hide">Möchtest du diesen Eintrag wirklich ausblenden?</label>
+			<label index="message_move_posts">In welches Thema soll dieser (und alle nachfolgenden) Posts verschoben werden?</label>
+			<label index="message_move_thread">In welches Forum soll dieses Thema verschoben werden?</label>
 		</languageKey>
 	</data>
 </T3locallang>
