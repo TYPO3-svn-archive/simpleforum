@@ -33,16 +33,16 @@ require_once(PATH_tslib.'class.tslib_pibase.php');
  * @subpackage	tx_simpleforum
  */
 class tx_simpleforum_pi1 extends tslib_pibase {
-	var $prefixId      = 'tx_simpleforum_pi1';		// Same as class name
+	var $prefixId      = 'tx_simpleforum_pi1';					// Same as class name
 	var $scriptRelPath = 'pi1/class.tx_simpleforum_pi1.php';	// Path to this script relative to the extension dir.
-	var $extKey        = 'simpleforum';	// The extension key.
+	var $extKey        = 'simpleforum';							// The extension key.
 	var $pi_checkCHash = true;
-	var $ts;	//TimeStamp
+	var $ts;		//TimeStamp
 	var $smilieApi;
-	var $users;  //cached user-information
-	var $forums;  //cached forum-information
-	var $threads;  //cached thread-information
-	var $posts;  //cached post-information
+	var $users;		//cached user-information
+	var $forums;	//cached forum-information
+	var $threads;	//cached thread-information
+	var $posts;		//cached post-information
 	var $isAdmin = false;
 	var $continue = true;
 
@@ -144,6 +144,11 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		if (intval($this->piVars['noadmin']) == 1) $this->isAdmin = false;
 	}
 
+	/**
+	 * Calls specific admin functions based on provieded gp-parameters
+	 *
+	 * @return	string		HTML output
+	 */
 	function admin() {
 		$content = '<h1>' . $this->pi_getLL('contextmenu_' . $this->piVars['adminAction']) . '</h1>';
 		$this->piVars['id'] = intVal($this->piVars['id']);
@@ -204,6 +209,13 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		return $content;
 	}
 
+	/**
+	 * Returns form asking to which location thread/posts should be moved
+	 *
+	 * @param	array		$arrYes: array of urlParamters for "Submit"-Link
+	 * @param	array		$arrNo: array of urlParamters for "cancel"-Link
+	 * @return	string		HTML output
+	 */
 	function admin_move_form($arrYes, $arrNo) {
 		switch ($this->piVars['type']) {
 			CASE 'post':
@@ -236,6 +248,14 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		);
 	}
 
+	/**
+	 * Shows message asking whether to continue or cancel process
+	 *
+	 * @param	string		$message: displayed message
+	 * @param	array		$yes: array of urlParameters for "Continue"-Link
+	 * @param	array		$no: array of urlParameters for "Cancel"-Link
+	 * @return	string		HTML output
+	 */
 	function admin_alert($message, $yes, $no) {
 		$template = $this->cObj->getSubpart($this->templateCode, '###ALERT###');
 
@@ -253,6 +273,16 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		return $content;
 	}
 
+	/**
+	 * Shows message asking whether to continue or cancel process
+	 * and asking for further input
+	 *
+	 * @param	array		$conf: Konfiguration array(formtype, options)
+	 * @param	string		$message: displayed message
+	 * @param	array		$action: array of urlParameters for "Continue"-Link
+	 * @param	array		$no: array of urlParameters for "Cancel"-Link
+	 * @return	string		HTML output
+	 */
 	function admin_form($conf, $message, $action, $no) {
 		$template = $this->cObj->getSubpart($this->templateCode, '###ALERTFORM###');
 
@@ -299,6 +329,14 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		return $content;
 	}
 
+	/**
+	 * Process edit of new post-content/thread-topic
+	 *
+	 * @param	string		$type: allowed: post/thread
+	 * @param	integer		$id: uid of post/thread
+	 * @param	string		$content: new content
+	 * @return	void
+	 */
 	function admin_edit($type, $id, $content) {
 		switch ($type) {
 			CASE 'post':
@@ -310,6 +348,13 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		}
 	}
 
+	/**
+	 * Process lock of thread
+	 *
+	 * @param	string		$type: allowed: thread
+	 * @param	integer		$id: uid of thread
+	 * @return	void
+	 */
 	function admin_lock($type, $id) {
 		switch ($type) {
 			CASE 'thread':
@@ -318,6 +363,13 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		}
 	}
 
+	/**
+	 * Process unlock of thread
+	 *
+	 * @param	string		$type: allowed: thread
+	 * @param	integer		$id: uid of thread
+	 * @return	void
+	 */
 	function admin_unlock($type, $id) {
 		switch ($type) {
 			CASE 'thread':
@@ -326,6 +378,13 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		}
 	}
 
+	/**
+	 * Process hide of post
+	 *
+	 * @param	string		$type: allowed: post
+	 * @param	integer		$id: uid of post
+	 * @return	void
+	 */
 	function admin_hide($type, $id) {
 		switch ($type) {
 			CASE 'post':
@@ -334,6 +393,14 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		}
 	}
 
+	/**
+	 * Process move of thread/posts
+	 *
+	 * @param	string		$type: allowed: post/thread
+	 * @param	integer		$id: uid of post/thread
+	 * @param	integer		$pid: uid of new parent-record
+	 * @return	void
+	 */
 	function admin_move($type, $id, $pid) {
 		switch ($type) {
 			CASE 'post':
@@ -346,6 +413,13 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		}
 	}
 
+	/**
+	 * Process delete of post/thread
+	 *
+	 * @param	string		$type: allowed: thread/post
+	 * @param	integer		$id: uid of thread/post
+	 * @return	void
+	 */
 	function admin_delete($type, $id) {
 		switch ($type) {
 			CASE 'post':
@@ -864,6 +938,12 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		return $content;
 	}
 
+	/**
+	 * Returns admin context menu incl. wrap
+	 *
+	 * @param	array		$conf: configuration array
+	 * @return	string		HTML output
+	 */
 	function adminMenu($conf=array()) {
 		if ($this->isAdmin) {
 			$content = '<a href="#" onclick="txSimpleForumAdminMenu(event, '.$conf['id'].'); return false;" title="'.$this->pi_getLL('adminMenuTitle').'"><img src="' . $this->conf['adminIcon'] . '" /></a>';
@@ -882,6 +962,12 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		return $this->cObj->substituteMarker($conf['template'], '###ADMINICONS###', $content);
 	}
 
+	/**
+	 * Returns plain admin context menu
+	 *
+	 * @param	array		$conf: configuration array
+	 * @return	string		HTML output
+	 */
 	function adminMenu_getMenu($conf) {
 		$contextMenu = $this->cObj->getSubpart($this->cObj->fileResource('EXT:simpleforum/res/contextmenu.html'),'###CONTEXTMENU###');
 		$marker = array(
