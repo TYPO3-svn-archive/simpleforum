@@ -3,7 +3,7 @@ plugin.tx_simpleforum_pi1 {
 	rpp = 20
 	strftime = %a %d. %b %Y - %H:%M h
 	profilePID = 1
-	profileParam = tx_feuser_pi1[uid]
+	profileParam = tx_feuser_pi1[showUid]
 	storagePid = 0
 	preventDuplicatePosts = 1
 	lockedIcon = EXT:simpleforum/res/lock.png
