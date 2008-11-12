@@ -619,6 +619,7 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		foreach ($posts as $post) {
 			$linkAuthor = $this->linkToUser($post['author']);
 			$user = $this->data_user($post['author']);
+			$message = htmlspecialchars($message);
 			$message = nl2br($this->smilieApi ? $this->smilieApi->replaceSmilies($post['message']) : $post['message']);
 
 			$markerSub = array(
