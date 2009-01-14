@@ -416,6 +416,16 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 	/**
 	 * Process delete of post/thread
 	 *
+	 * CASE 'post':
+	 * 		- delted is set to 1 in database record
+	 * CASE 'thread':
+	 * 		- delted is set to 1 in thread database record
+	 * 		- all related post records which are already delted are set to 'hidden'
+	 * 		- all related post records are set to 'deleted'
+	 *
+	 * By this enabling a thread again won't show all sepratedly deleted posts again,
+	 * but only the ones which were visible when the thread got deleted
+	 *
 	 * @param	string		$type: allowed: thread/post
 	 * @param	integer		$id: uid of thread/post
 	 * @return	void
@@ -427,6 +437,8 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 				break;
 			CASE 'thread':
 				$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_threads', 'uid='.$id, array('deleted'=>1));
+				$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_posts', 'deleted=1 AND tid='.$id, array('hidden'=>1));
+				$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_posts', 'tid='.$id, array('deleted'=>1));
 				break;
 		}
 	}
@@ -664,15 +676,15 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		$content = '';
 		if ($conf['tid']) {
 			$thread = $this->data_thread(intVal($conf['tid']));
-			$addClause = ($thread['locked'] != 1);
+			$threadOpen = ($thread['locked'] != 1);
 			$template = $this->cObj->getSubpart($this->templateCode, '###REPLYBOX###');
 		} else {
 			$forum = $this->data_forum(intVal($conf['fid']));
-			$addClause = true;
+			$threadOpen = true;
 			$template = $this->cObj->getSubpart($this->templateCode, '###NEWTHREAD###');
 		}
 
-		if ($GLOBALS['TSFE']->loginUser && $addClause) {
+		if ($GLOBALS['TSFE']->loginUser && $threadOpen) {
 
 			$actionLink = $this->cObj->typoLink_URL(array(
 				'parameter' => $GLOBALS['TSFE']->id,
@@ -699,6 +711,12 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 			);
 
 			$content = $this->cObj->substituteMarkerArray($template, $marker);
+		} elseif ($GLOBALS['TSFE']->loginUser && !$threadOpen) {
+			$content = $this->pi_getLL('message_threadLocked');
+		} elseif (!$GLOBALS['TSFE']->loginUser && $conf['tid']) {
+			$content = $this->pi_getLL('message_loginForReply');
+		} else {
+			$content = $this->pi_getLL('message_loginForThread');
 		}
 		return $content;
 	}
