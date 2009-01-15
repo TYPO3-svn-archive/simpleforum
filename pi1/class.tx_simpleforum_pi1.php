@@ -1041,10 +1041,13 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 			$user = $this->data_user($userId);
 			$username = $user['username'];
 		}
-		$content = $this->pi_linkToPage(
+		$content = $this->cObj->typoLink(
 			$username,
-			$this->conf['profilePID'],'',
-			array($this->conf['profileParam']=>$userId)
+			array(
+				'parameter' => $this->conf['profilePID'],
+				'useCacheHash' => true,
+				'additionalParams' => '&'.$this->conf['profileParam'].'='.$userId
+			)
 		);
 		return $content;
 	}
