@@ -88,7 +88,7 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 	}
 
 	/**
-	 * Updates extensin internal cache
+	 * Updates extension internal cache
 	 *
 	 * @return	void
 	 */
@@ -111,7 +111,7 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 	}
 
 	/**
-	 * Initiates configuration values ans set additionalHeaderData
+	 * Initiates configuration values and sets additionalHeaderData
 	 *
 	 * @return	void
 	 */
@@ -120,10 +120,12 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		$this->pi_loadLL();
 
 		$this->pi_initPIflexForm();
-		$this->conf['introtext'] = $this->pi_getFFvalue($this->cObj->data['pi_flexform'], 'introtext', 'sDEF');
+		$this->fetchConfigValue('introtext');
 
 		$this->ts = mktime();
-		$this->templateCode = $this->cObj->fileResource('EXT:simpleforum/res/template.tmpl');
+		if (!$this->conf['templateFile']) $this->conf['templateFile'] = 'EXT:simpleforum/res/template.tmpl';
+		$this->templateCode = $this->cObj->fileResource($this->conf['templateFile']);
+		$this->templateCode = $this->cObj->substituteMarker($this->templateCode, '###SITE_REL_PATH###', t3lib_extMgm::siteRelPath('simpleforum'));
 
 		//Replace 'EXT:simpleforum/' in conf
 		$list = array('lockedIcon', 'adminIcon');
@@ -134,10 +136,7 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		$key = 'tx_simpleforum_' . md5($this->templateCode);
 		if (!isset($GLOBALS['TSFE']->additionalHeaderData[$key])) {
 			$headerParts = $this->cObj->getSubpart($this->templateCode, '###HEADER_ADDITIONS###');
-			if ($headerParts) {
-				$headerParts = $this->cObj->substituteMarker($headerParts, '###SITE_REL_PATH###', t3lib_extMgm::siteRelPath('simpleforum'));
-				$GLOBALS['TSFE']->additionalHeaderData[$key] = $headerParts;
-			}
+			if ($headerParts) $GLOBALS['TSFE']->additionalHeaderData[$key] = $headerParts;
 		}
 
 		$this->isAdmin = (t3lib_div::inList($GLOBALS['TSFE']->fe_user->user['usergroup'], $this->conf['adminGroup']));
@@ -145,7 +144,31 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 	}
 
 	/**
-	 * Calls specific admin functions based on provieded gp-parameters
+	 * Fetches configuration value from flexform. If value exists, value in
+	 * <code>$this->conf</code> is replaced with this value.
+	 *
+	 * @author Dmitry Dulepov <dmitry@typo3.org>
+	 * @param	string		$param	Parameter name. If <code>.</code> is found, the first part is section name, second is key (applies only to $this->conf)
+	 * @return	void
+	 */
+	function fetchConfigValue($param) {
+		if (strchr($param, '.')) {
+			list($section, $param) = explode('.', $param, 2);
+		}
+		$value = trim($this->pi_getFFvalue($this->cObj->data['pi_flexform'], $param, ($section ? 's' . ucfirst($section) : 'sDEF')));
+		if (!is_null($value) && $value != '') {
+			if ($section) {
+				$this->conf[$section . '.'][$param] = $value;
+			}
+			else {
+				$this->conf[$param] = $value;
+			}
+		}
+	}
+
+
+	/**
+	 * Calls specific admin functions based on provieded GET/POST parameters
 	 *
 	 * @return	string		HTML output
 	 */
