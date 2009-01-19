@@ -61,6 +61,18 @@ $TCA['tx_simpleforum_forums'] = array (
 				'size' => '30',
 			)
 		),
+		'usergroup' => Array (
+			'exclude' => 1,
+			'label' => 'LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_forums.usergroup',
+			'config' => Array (
+				'type' => 'group',
+				'internal_type' => 'db',
+				'allowed' => 'fe_groups',
+				'size' => 5,
+				'minitems' => 0,
+				'maxitems' => 10,
+			)
+		),
 		'threadnumber' => Array (
 			'config' => Array (
 				'type' => 'passthrough',
@@ -83,7 +95,7 @@ $TCA['tx_simpleforum_forums'] = array (
 		),
 	),
 	'types' => array (
-		'0' => array('showitem' => 'hidden;;1;;1-1-1, topic, description, threadnumber, lastpost, lastpostuser, lastpostusername')
+		'0' => array('showitem' => 'hidden;;1;;1-1-1, topic, description, threadnumber, lastpost, lastpostuser, lastpostusername, usergroup')
 	),
 	'palettes' => array (
 		'1' => array('showitem' => 'starttime, endtime')

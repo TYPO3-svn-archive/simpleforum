@@ -18,7 +18,7 @@ $TCA['tx_simpleforum_forums'] = array (
 		'iconfile'          => t3lib_extMgm::extRelPath($_EXTKEY).'icon_tx_simpleforum_forums.gif',
 	),
 	'feInterface' => array (
-		'fe_admin_fieldList' => 'hidden, starttime, endtime, topic, description, threadnumber, lastpost, lastpostuser, lastpostusername',
+		'fe_admin_fieldList' => 'hidden, starttime, endtime, topic, description, threadnumber, lastpost, lastpostuser, lastpostusername, usergroup',
 	)
 );
 

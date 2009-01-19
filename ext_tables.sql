@@ -18,6 +18,7 @@ CREATE TABLE tx_simpleforum_forums (
 	lastpost tinytext NOT NULL,
 	lastpostuser int(11) DEFAULT '0' NOT NULL,
 	lastpostusername tinytext NOT NULL,
+	usergroup tinytext NOT NULL,
 	PRIMARY KEY (uid),
 	KEY parent (pid)
 );

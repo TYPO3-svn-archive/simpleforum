@@ -9,6 +9,7 @@
 			<label index="tx_simpleforum_forums">Forums</label>
 			<label index="tx_simpleforum_forums.topic">Topic</label>
 			<label index="tx_simpleforum_forums.description">Short Description</label>
+			<label index="tx_simpleforum_forums.usergroup">Usergroup</label>
 			<label index="tx_simpleforum_threads">Forumtopics</label>
 			<label index="tx_simpleforum_threads.fid">Forum</label>
 			<label index="tx_simpleforum_threads.topic">Topic</label>
@@ -29,6 +30,7 @@
 			<label index="tx_simpleforum_forums">Foren</label>
 			<label index="tx_simpleforum_forums.topic">Thema</label>
 			<label index="tx_simpleforum_forums.description">kurze Beschreibung</label>
+			<label index="tx_simpleforum_forums.usergroup">Benutzergruppe</label>
 			<label index="tx_simpleforum_threads">Forumthemen</label>
 			<label index="tx_simpleforum_threads.fid">Forum</label>
 			<label index="tx_simpleforum_threads.topic">Thema</label>
