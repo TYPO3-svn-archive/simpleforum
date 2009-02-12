@@ -41,9 +41,15 @@ class tx_simpleforum_admin {
 	var $scriptRelPath	= 'classes/class.tx_simpleforum_admin.php';	// Path to this script relative to the extension dir.
 	var $extKey			= 'simpleforum';	// The extension key.
 
+	/**
+	 * cObj
+	 *
+	 * @var tslib_cObj
+	 */
+	var $cObj;
 
 	function start($conf, $parameter) {
-		$this->cObj = new tslib_cObj;
+		$this->cObj = t3lib_div::makeInstance('tslib_cObj');
 		$this->conf = $conf;
 		$this->piVars = $parameter;
 	}
