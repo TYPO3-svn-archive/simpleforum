@@ -38,6 +38,7 @@
  * @subpackage simpleforum
  */
 class tx_simpleforum_admin {
+	var $prefixId		= 'tx_simpleforum_pi1';
 	var $scriptRelPath	= 'classes/class.tx_simpleforum_admin.php';	// Path to this script relative to the extension dir.
 	var $extKey			= 'simpleforum';	// The extension key.
 
@@ -48,91 +49,24 @@ class tx_simpleforum_admin {
 	 */
 	var $cObj;
 
-	function start($conf, $parameter) {
+	var $continue		= true;
+
+	function start($conf, $piVars, &$pObj) {
 		$this->cObj = t3lib_div::makeInstance('tslib_cObj');
+		$this->pObj = &$pObj;
 		$this->conf = $conf;
-		$this->piVars = $parameter;
+		$this->piVars = $piVars;
+		$this->templateCode = $this->cObj->fileResource($this->conf['templateFile']);
 	}
 
-/**
-	 * Returns admin context menu incl. wrap
-	 *
-	 * @param	array		$conf: configuration array
-	 * @return	string		HTML output
-	 */
-	function adminMenu($conf=array()) {
-		if ($this->isAdmin) {
-			$content = '<a href="#" onclick="txSimpleForumAdminMenu(event, '.$conf['id'].'); return false;" title="'.$this->pi_getLL('adminMenuTitle').'"><img src="' . $this->conf['adminIcon'] . '" /></a>';
-
-			$items = array(
-				'delete' => array('icon' => 'res/cross.png'),
-				'edit' => array('icon' => 'res/pencil.png'),
-				'hide' => array('icon' => 'res/eye.png'),
-				'move' => array('icon' => 'res/table_go.png'),
-				'lock' => array('icon' => 'res/lock.png'),
-				'unlock' => array('icon' => 'res/lock_open.png'),
-			);
-
-			$content .= $this->adminMenu_getMenu(array('items' => $items, 'show'=>$conf['show'], 'id'=>$conf['id'], 'type' => $conf['type'], 'leftright' => $conf['leftright']));
-		}
-		return $this->cObj->substituteMarker($conf['template'], '###ADMINICONS###', $content);
-	}
-
-	/**
-	 * Returns plain admin context menu
-	 *
-	 * @param	array		$conf: configuration array
-	 * @return	string		HTML output
-	 */
-	function adminMenu_getMenu($conf) {
-		$contextMenu = $this->cObj->getSubpart($this->cObj->fileResource('EXT:simpleforum/res/contextmenu.html'),'###CONTEXTMENU###');
-		$marker = array(
-			'###UID###' => $conf['id'],
-			'###LEFTRIGHT###' => $conf['leftright'],
-		);
-
-		$rowTemplate = $this->cObj->getSubpart($contextMenu, '###ROW###');
-		foreach ($conf['show'] as $label) {
-			$urlParameter = array(
-				'no_cache' => 1,
-				'tx_simpleforum_pi1[adminAction]' => $label,
-				'tx_simpleforum_pi1[type]' => $conf['type'],
-				'tx_simpleforum_pi1[id]' => $conf['id'],
-				'tx_simpleforum_pi1[chk]' => md5($conf['type'] . $conf['id'] . $label . $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']),
-			);
-			foreach ($urlParameter as $k => $v) {
-				$urlParameterStr .= '&'.$k.'='.$v;
-			}
-			$url = $this->cObj->typoLink_URL(array(
-				'parameter' => $GLOBALS['TSFE']->id,
-				'addQueryString' => 1,
-				'addQueryString.' => array(
-					'exclude' => 'cHash,no_cache',
-				),
-				'additionalParams' => $urlParameterStr,
-				'useCacheHash' => false,
-			));
-			$subMarker = array(
-				'###ICON###' => t3lib_extMgm::siteRelPath('simpleforum') . $conf['items'][$label]['icon'],
-				'###LABEL###' => $this->pi_getLL('contextmenu_'.$label),
-				'###URL###' => $url,
-			);
-			$rows[] = $this->cObj->substituteMarkerArray($rowTemplate, $subMarker);
-		}
-		$contextMenu = $this->cObj->substituteSubpart($contextMenu, '###ROW###', implode('', $rows));
-		$contextMenu = $this->cObj->substituteMarkerArray($contextMenu, $marker);
-
-		$content = $contextMenu;
-		return $content;
-	}
 
 	/**
 	 * Calls specific admin functions based on provieded GET/POST parameters
 	 *
 	 * @return	string		HTML output
 	 */
-	function admin() {
-		$content = '<h1>' . $this->pi_getLL('contextmenu_' . $this->piVars['adminAction']) . '</h1>';
+	function dispatch() {
+		$content = '<h1>' . $this->pObj->pi_getLL('contextmenu_' . $this->piVars['adminAction']) . '</h1>';
 		$this->piVars['id'] = intVal($this->piVars['id']);
 
 		$arrYes = array(
@@ -156,7 +90,7 @@ class tx_simpleforum_admin {
 					$content .= $this->admin_delete($this->piVars['type'],$this->piVars['id']);
 				} else {
 					$content .=	$this->admin_alert(
-						$this->pi_getLL('message_delete'),
+						$this->pObj->pi_getLL('message_delete'),
 						array_merge($arrYes, array($this->prefixId.'[adminAction]' => 'delete')),
 						$arrNo
 					);
@@ -180,14 +114,13 @@ class tx_simpleforum_admin {
 					$content .= $this->admin_hide($this->piVars['type'],$this->piVars['id']);
 				} else {
 					$content .= $this->admin_alert(
-						$this->pi_getLL('message_hide'),
+						$this->pObj->pi_getLL('message_hide'),
 						array_merge($arrYes, array($this->prefixId.'[adminAction]' => 'hide')),
 						$arrNo
 					);
 				}
 				break;
 		}
-		$this->updateAll();
 		return $content;
 	}
 
@@ -201,20 +134,20 @@ class tx_simpleforum_admin {
 	function admin_move_form($arrYes, $arrNo) {
 		switch ($this->piVars['type']) {
 			CASE 'post':
-				$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,topic', 'tx_simpleforum_threads', 'deleted=0 AND hidden=0', '', 'lastpost DESC');
+				$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,topic', 'tx_simpleforum_threads', 'deleted=0 AND hidden=0', '', 'crdate DESC');
 				$options = array();
 				foreach ($rows as $row) {
 					$options[$row['uid']] = $row['topic'];
 				}
-				$message = $this->pi_getLL('message_move_posts');
+				$message = $this->pObj->pi_getLL('message_move_posts');
 				break;
 			CASE 'thread':
-				$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,topic', 'tx_simpleforum_forums', 'deleted=0 AND hidden=0', '', 'lastpost DESC');
+				$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,topic', 'tx_simpleforum_forums', 'deleted=0 AND hidden=0', '', 'crdate DESC');
 				$options = array();
 				foreach ($rows as $row) {
 					$options[$row['uid']] = $row['topic'];
 				}
-				$message = $this->pi_getLL('message_move_thread');
+				$message = $this->pObj->pi_getLL('message_move_thread');
 				break;
 		}
 
@@ -241,8 +174,8 @@ class tx_simpleforum_admin {
 	function admin_alert($message, $yes, $no) {
 		$template = $this->cObj->getSubpart($this->templateCode, '###ALERT###');
 
-		$links['yes'] = $this->pi_linkToPage($this->pi_getLL('yes'),$GLOBALS['TSFE']->id, '',$yes);
-		$links['no'] = $this->pi_linkToPage($this->pi_getLL('no'),$GLOBALS['TSFE']->id, '',$no);
+		$links['yes'] = $this->pObj->pi_linkToPage($this->pObj->pi_getLL('yes'),$GLOBALS['TSFE']->id, '',$yes);
+		$links['no'] = $this->pObj->pi_linkToPage($this->pObj->pi_getLL('no'),$GLOBALS['TSFE']->id, '',$no);
 
 		$marker = array(
 			'###MESSAGE###' => $message,
@@ -297,12 +230,12 @@ class tx_simpleforum_admin {
 			'additionalParams' => $urlParameterStr,
 			'useCacheHash' => false,
 		));
-		$links['no'] = $this->pi_linkToPage($this->pi_getLL('no'),$GLOBALS['TSFE']->id, '',$no);
+		$links['no'] = $this->pObj->pi_linkToPage($this->pObj->pi_getLL('no'),$GLOBALS['TSFE']->id, '',$no);
 
 		$marker = array(
 			'###MESSAGE###' => $message,
 			'###ACTIONURL###' => $actionUrl,
-			'###L_SUBMIT###' => $this->pi_getLL('L_Submit'),
+			'###L_SUBMIT###' => $this->pObj->pi_getLL('L_Submit'),
 			'###NO###' => $links['no'],
 		);
 		$this->continue = false;
@@ -323,9 +256,11 @@ class tx_simpleforum_admin {
 		switch ($type) {
 			CASE 'post':
 				$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_posts', 'uid='.$id, array('message'=>$content));
+				$this->pObj->cache->deleteCacheThread(intVal($this->piVars['tid']));
 				break;
 			CASE 'thread':
 				$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_threads', 'uid='.$id, array('topic'=>$content));
+				$this->pObj->cache->deleteCacheForum(intVal($this->piVars['fid']));
 				break;
 		}
 	}
@@ -341,6 +276,8 @@ class tx_simpleforum_admin {
 		switch ($type) {
 			CASE 'thread':
 				$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_threads', 'uid='.$id, array('locked'=>1));
+				$this->pObj->cache->deleteCacheForum(intVal($this->piVars['fid']));
+				$this->pObj->cache->deleteCacheThread(intVal($this->piVars['tid']));
 				break;
 		}
 	}
@@ -356,6 +293,8 @@ class tx_simpleforum_admin {
 		switch ($type) {
 			CASE 'thread':
 				$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_threads', 'uid='.$id, array('locked'=>0));
+				$this->pObj->cache->deleteCacheForum(intVal($this->piVars['fid']));
+				$this->pObj->cache->deleteCacheThread(intVal($this->piVars['tid']));
 				break;
 		}
 	}
@@ -371,6 +310,7 @@ class tx_simpleforum_admin {
 		switch ($type) {
 			CASE 'post':
 				$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_posts', 'uid='.$id, array('approved'=>0));
+				$this->pObj->cache->deleteCacheThread(intVal($this->piVars['tid']));
 				break;
 		}
 	}
@@ -388,9 +328,13 @@ class tx_simpleforum_admin {
 			CASE 'post':
 				$post = $this->data_post($id);
 				$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_posts', 'tid='.$post['tid'].' AND crdate>='.$post['crdate'], array('tid'=>$pid));
+				$this->pObj->cache->deleteCacheForum(intVal($this->piVars['fid']));
+				$this->pObj->cache->deleteCacheThread(intVal($this->piVars['tid']));
 				break;
 			CASE 'thread':
 				$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_threads', 'uid='.$id, array('fid'=>$pid));
+				$this->pObj->cache->deleteCacheForum(intVal($this->piVars['fid']));
+				$this->pObj->cache->deleteCacheThread(intVal($this->piVars['tid']));
 				break;
 		}
 	}
@@ -416,11 +360,14 @@ class tx_simpleforum_admin {
 		switch ($type) {
 			CASE 'post':
 				$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_posts', 'uid='.$id, array('deleted'=>1));
+				$this->pObj->cache->deleteCacheThread(intVal($this->piVars['tid']));
 				break;
 			CASE 'thread':
 				$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_threads', 'uid='.$id, array('deleted'=>1));
 				$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_posts', 'deleted=1 AND tid='.$id, array('hidden'=>1));
 				$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_posts', 'tid='.$id, array('deleted'=>1));
+				$this->pObj->cache->deleteCacheForum(intVal($this->piVars['fid']));
+				$this->pObj->cache->deleteCacheThread(intVal($this->piVars['tid']));
 				break;
 		}
 	}

@@ -18,7 +18,7 @@ $TCA['tx_simpleforum_forums'] = array (
 		'iconfile'          => t3lib_extMgm::extRelPath($_EXTKEY).'icon_tx_simpleforum_forums.gif',
 	),
 	'feInterface' => array (
-		'fe_admin_fieldList' => 'hidden, starttime, endtime, topic, description, threadnumber, lastpost, lastpostuser, lastpostusername, usergroup',
+		'fe_admin_fieldList' => 'hidden, starttime, endtime, topic, description, usergroup',
 	)
 );
 
@@ -40,7 +40,7 @@ $TCA['tx_simpleforum_threads'] = array (
 		'iconfile'          => t3lib_extMgm::extRelPath($_EXTKEY).'icon_tx_simpleforum_threads.gif',
 	),
 	'feInterface' => array (
-		'fe_admin_fieldList' => 'hidden, starttime, endtime, fid, topic, postnumber, lastpost, lastpostusername, lastpostuser, authorname, author, locked, usergroup',
+		'fe_admin_fieldList' => 'hidden, starttime, endtime, fid, topic, author, locked, usergroup',
 	)
 );
 
@@ -67,6 +67,10 @@ $TCA['tx_simpleforum_posts'] = array (
 	'feInterface' => array (
 		'fe_admin_fieldList' => 'hidden, tid, author, message, approved',
 	)
+);
+
+$TCA['cache_txsimpleforum'] = array (
+	'hideTable'	=> 1,
 );
 
 

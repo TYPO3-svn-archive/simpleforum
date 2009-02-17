@@ -40,23 +40,24 @@ class tx_simpleforum_user {
 	var $scriptRelPath	= 'model/class.tx_simpleforum_user.php';	// Path to this script relative to the extension dir.
 	var $extKey			= 'simpleforum';	// The extension key.
 
-	protected $singleton = array();
+	protected static $singleton = array();
 
 	protected $row = array();
 	protected $origRow = array();
 
-	protected function __contruct($userId) {
+	protected function __construct($userId) {
 		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid,username,name,first_name,last_name,showname,image',
 				'fe_users', 'uid='.$userId);
 		if ($res) {
-			$this->row = $this->origRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc;
+			$this->row = $this->origRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
 		}
 	}
 
-	public function getInstance($userId) {
+	public static function getInstance($userId) {
 		$userId = intVal($userId);
 		if (!isset(self::$singleton[$userId])) {
-			self::$singleton[$userId] = self::__contruct($userId);
+			$className = t3lib_div::makeInstanceClassName('tx_simpleforum_user');
+			self::$singleton[$userId] = new $className($userId);
 		}
 		return self::$singleton[$userId];
 	}

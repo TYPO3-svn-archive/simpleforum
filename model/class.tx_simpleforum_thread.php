@@ -57,6 +57,8 @@ class tx_simpleforum_thread {
 	 */
 	protected $origArray = array();
 
+	protected $statistics = array();
+
 	/**
 	 * Creates thread object
 	 *
@@ -98,6 +100,15 @@ class tx_simpleforum_thread {
 		return empty($this->row);
 	}
 
+	function isLocked() {
+		return ($this->row['locked'] == 1);
+	}
+
+
+	function getFid() {
+		return intVal($this->row['fid']);
+	}
+
 	/**
 	 * Returns uid of thread
 	 *
@@ -128,7 +139,6 @@ class tx_simpleforum_thread {
 		$this->row['deleted'] = 0;
 	}
 
-	//pid 	sorting 	hidden 	starttime 	endtime 	threadnumber 	lastpost 	lastpostuser 	lastpostusername
 
 	/**
 	 * Returns topic of thread
@@ -155,11 +165,11 @@ class tx_simpleforum_thread {
 	 * @return	mixed
 	 */
 	public function getAuthor() {
-		return array('uid' => $this->row['author'], 'name' => $this->row['author_name']);
+		return $this->row['author'];
 	}
 
 	/**
-	 * Set author of photo
+	 * Set author of thread
 	 *
 	 * @param	mixed		$author: (integer: fe_users_uid / string: author name)
 	 */
@@ -171,7 +181,6 @@ class tx_simpleforum_thread {
 			if (!empty($rows) && is_array($rows)) {
 				$this->row['author'] = intVal($rows[0]['uid']);
 			}
-			$this->row['author_name'] = $author;
 		}
 	}
 
@@ -194,7 +203,22 @@ class tx_simpleforum_thread {
 	}
 
 
+	public function getStatistics($name) {
+		$pattern = array('user', 'lastpost', 'postnumber');
+		if (!in_array($name, $pattern)) return false;
 
+		$columns = array('user' => 'author', 'lastpost' => 'crdate', 'postnumber' => 'COUNT(uid)');
+
+		if (!isset($this->statistics[$name])) {
+			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery($columns[$name], 'tx_simpleforum_posts', 'tid=' . $this->row['uid'] . ' AND deleted=0 AND hidden=0 AND approved=1', '', 'crdate DESC', '1');
+			if ($res) {
+				$row = $GLOBALS['TYPO3_DB']->sql_fetch_row($res);
+				$this->statistics[$name] = $row[0];
+			}
+		}
+
+		return $this->statistics[$name];
+	}
 }
 
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/simpleforum/model/class.tx_simpleforum_thread.php'])	{

@@ -128,7 +128,7 @@ class tx_simpleforum_post {
 		$this->row['deleted'] = 0;
 	}
 
-	//pid 	sorting 	hidden 	starttime 	endtime 	postnumber 	lastpost 	lastpostuser 	lastpostusername
+
 
 	/**
 	 * Returns topic of post
@@ -155,7 +155,7 @@ class tx_simpleforum_post {
 	 * @return	mixed
 	 */
 	public function getAuthor() {
-		return array('uid' => $this->row['author'], 'name' => $this->row['author_name']);
+		return $this->row['author'];
 	}
 
 	/**
@@ -171,29 +171,30 @@ class tx_simpleforum_post {
 			if (!empty($rows) && is_array($rows)) {
 				$this->row['author'] = intVal($rows[0]['uid']);
 			}
-			$this->row['author_name'] = $author;
 		}
 	}
 
-	/**
-	 * Returns description of post
-	 *
-	 * @return	string
-	 */
-	public function getDescription() {
-		return $this->row['description'];
+
+	public function getMessage() {
+		return $this->row['message'];
 	}
 
-	/**
-	 * Set description of post
-	 *
-	 * @param	string		$description: description of post
-	 */
-	public function setDescription($description) {
-		$this->row['description'] = $description;
+	public function setMessage($message) {
+		$this->row['message'] = $message;
+	}
+
+	public function getCrdate() {
+		return $this->row['crdate'];
 	}
 
 
+	public function getTid() {
+		return $this->row['tid'];
+	}
+
+	public function setTid($tid) {
+		$this->row['tid'] = intVal($tid);
+	}
 
 }
 

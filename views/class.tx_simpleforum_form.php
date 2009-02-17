@@ -44,22 +44,27 @@ class tx_simpleforum_form extends tslib_pibase {
 	var $extKey			= 'simpleforum';	// The extension key.
 
 
+	function __construct(&$pObj, $templateCode) {
+		$this->cObj = t3lib_div::makeInstance('tslib_cObj');
+		$this->pObj = &$pObj;
+		$this->templateCode = &$templateCode;
+	}
+
+
 	/**
 	 * Returns form. The type of the form is based on the conf array
 	 *
 	 * @param	array		$conf: array with configuration
 	 * @return	string		HTML output
 	 */
-	function form($conf = array()) {
+	function output($forum, $thread=null) {
 		$content = '';
-		if ($conf['tid']) {
-			$thread = $this->data_thread(intVal($conf['tid']));
-			$threadOpen = ($thread['locked'] != 1);
-			$template = $this->cObj->getSubpart($this->templateCode, '###REPLYBOX###');
-		} else {
-			$forum = $this->data_forum(intVal($conf['fid']));
+		if ($thread === null) {
 			$threadOpen = true;
 			$template = $this->cObj->getSubpart($this->templateCode, '###NEWTHREAD###');
+		} else {
+			$threadOpen = !$thread->isLocked();
+			$template = $this->cObj->getSubpart($this->templateCode, '###REPLYBOX###');
 		}
 
 		if ($GLOBALS['TSFE']->loginUser && $threadOpen) {
@@ -75,30 +80,44 @@ class tx_simpleforum_form extends tslib_pibase {
 			));
 
 			$marker = array(
-				'###FID###' => intVal($conf['fid']),
-				'###TID###' => intVal($conf['tid']),
-				'###LABEL_REPLYTO###' => $this->pi_getLL('L_ReplyTo'),
-				'###THREADTITLE###' => $thread['topic'],
-				'###L_SUBMIT###' => $this->pi_getLL('L_Submit'),
+				'###FID###' => $forum->getUid(),
+				'###TID###' => ($thread === null ? '' : $thread->getUid()),
+				'###LABEL_REPLYTO###' => $this->pObj->pi_getLL('L_ReplyTo'),
+				'###THREADTITLE###' => ($thread === null ? '' : $thread->getTopic()),
+				'###L_SUBMIT###' => $this->pObj->pi_getLL('L_Submit'),
 				'###ACTION_URL###' => $actionLink,
-				'###L_NEW_THREAD###' => $this->pi_getLL('L_NewThread'),
-				'###FORUMTITLE###' => $forum['topic'],
-				'###L_THREADTITLE###' => $this->pi_getLL('L_ThreadTitle'),
+				'###L_NEW_THREAD###' => $this->pObj->pi_getLL('L_NewThread'),
+				'###FORUMTITLE###' => $forum->getTopic(),
+				'###L_THREADTITLE###' => $this->pObj->pi_getLL('L_ThreadTitle'),
 				'###V_THREADTITLE###' => '',
 				'###V_MESSAGE###' => '',
 			);
 
 			$content = $this->cObj->substituteMarkerArray($template, $marker);
 		} elseif ($GLOBALS['TSFE']->loginUser && !$threadOpen) {
-			$content = $this->pi_getLL('message_threadLocked');
+			$content = $this->pObj->pi_getLL('message_threadLocked');
 		} elseif (!$GLOBALS['TSFE']->loginUser && $conf['tid']) {
-			$content = $this->pi_getLL('message_loginForReply');
+			$content = $this->pObj->pi_getLL('message_loginForReply');
 		} else {
-			$content = $this->pi_getLL('message_loginForThread');
+			$content = $this->pObj->pi_getLL('message_loginForThread');
 		}
+		//$this->initRTE();
+		//$content .= $RTEItem = $this->RTEObj->drawRTE($this, 'tx_simpleforum_posts', 'message', $row, $PA, $specConf, $thisConfig, $RTEtypeVal, '', $thePidValue);
 		return $content;
 	}
 
+	function initRTE() {
+
+		if(!$this->RTEObj && $this->conf['RTEenabled']=1 && t3lib_extMgm::isLoaded('rtehtmlarea')) {
+		require_once(t3lib_extMgm::extPath('rtehtmlarea').'pi2/class.tx_rtehtmlarea_pi2.php');
+			$this->RTEObj = t3lib_div::makeInstance('tx_rtehtmlarea_pi2');
+		} elseif (!$this->RTEObj && $this->conf['RTEenabled']=1 && t3lib_extMgm::isLoaded('tinymce_rte')) {
+			require_once(t3lib_extMgm::extPath('tinymce_rte').'pi1/class.tx_tinymce_rte_pi1.php');
+			$this->RTEObj = t3lib_div::makeInstance('tx_tinymce_rte_pi1');
+		} else {
+			$this->RTEObj = 0;
+		}
+	}
 }
 
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/simpleforum/views/class.tx_simpleforum_form.php'])	{

@@ -31,6 +31,9 @@ require_once(t3lib_extMgm::extPath('simpleforum', 'model/class.tx_simpleforum_us
 
 require_once(t3lib_extMgm::extPath('simpleforum', 'classes/class.tx_simpleforum_admin.php'));
 require_once(t3lib_extMgm::extPath('simpleforum', 'classes/class.tx_simpleforum_auth.php'));
+require_once(t3lib_extMgm::extPath('simpleforum', 'classes/class.tx_simpleforum_cache.php'));
+
+require_once(t3lib_extMgm::extPath('simpleforum', 'views/class.tx_simpleforum_rendering.php'));
 
 
 /**
@@ -44,16 +47,15 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 	var $prefixId      = 'tx_simpleforum_pi1';					// Same as class name
 	var $scriptRelPath = 'pi1/class.tx_simpleforum_pi1.php';	// Path to this script relative to the extension dir.
 	var $extKey        = 'simpleforum';							// The extension key.
-	var $pi_checkCHash = true;
-	var $ts;		//TimeStamp
+	//var $pi_checkCHash = true;
 	var $smilieApi;
-	var $users;		//cached user-information
-	var $forums;	//cached forum-information
-	var $threads;	//cached thread-information
-	var $posts;		//cached post-information
 	var $isAdmin = false;
 	var $continue = true;
 	var $sorting = array();
+
+	var $forums = array();
+	var $threads = array();
+	var $posts = array();
 
 
 	/**
@@ -69,23 +71,32 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 
 		$GLOBALS['TYPO3_DB']->debugOutput = true;
 
-		$this->processSubmission();
-
-		//UPDATE extension "cache"
-		if ($this->continue && $this->piVars['updateAll'] == 1) {
-			$this->updateAll();
-		}
-
 		$check = md5($this->piVars['type'] . $this->piVars['id'] . $this->piVars['adminAction'] . $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']);
-		if($this->continue && $this->isAdmin && t3lib_div::inList('edit,delete,lock,unlock,move,hide', $this->piVars['adminAction']) && ($check == $this->piVars['chk'])) {
+		if($this->isAdmin && t3lib_div::inList('edit,delete,lock,unlock,move,hide', $this->piVars['adminAction']) && ($check == $this->piVars['chk'])) {
 			$content = $this->admin();
 		}
 
 		$content = $this->dispatcher();
 
+		$this->clearMem();
+
 		return $this->pi_wrapInBaseClass($content);
 	}
 
+	protected function clearMem() {
+		// Data Arrays
+		unset($this->forums);
+		unset($this->threads);
+		unset($this->posts);
+
+		// Global Vars
+		unset($this->conf);
+
+		// Classes
+		unset($this->auth);
+		unset($this->view);
+		unset($this->cache);
+	}
 
 	function init() {
 		$this->pi_setPiVarDefaults();
@@ -117,30 +128,65 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 			'auth' => t3lib_div::makeInstanceClassName('tx_simpleforum_auth'),
 		);
 
-		$this->role = array(
-			'0' => 'not logged in',
-			'1' => 'logged in',
-			'2' => 'admin',
-		);
+		$this->auth = new $this->model['auth']();
+		$this->auth->start($this->conf, $this->piVars, $this);
+
+		$this->view = new tx_simpleforum_rendering();
+		$this->view->start($this->conf, $this->piVars, $this);
+
+		$this->parentCE = $this->cObj->data['uid'];
+
+		$this->cache = new tx_simpleforum_cache();
+		$this->cache->start($this->conf, $this->piVars, $this);
 	}
 
 
 	function dispatcher() {
+		$continue = true;
+		$content = '';
 
-		//admin actions
-		if (isset($this->piVars['action'])) {
+		/**
+		 * ADMIN ACTIONS
+		 */
+		if (isset($this->piVars['action']) || isset($this->piVars['adminAction'])) {
 			$admin = new $this->model['admin'];
-			$admin->start($this->conf, $this->piVars);
+			$admin->start($this->conf, $this->piVars, $this);
+
+			$content .= $admin->dispatch();
+			$continue = $admin->continue;
+		}
+		if (!$continue) return $content;
+
+
+
+		/*
+		 * PROCESS SUBMITTED DATA
+		 */
+		$this->processSubmission();
+
+
+
+		/*
+		 * RETURN FORUM DATA
+		 */
+		$this->cache->getCache();
+		if (!$this->cache->hasCache) {
+
+			if (intVal($this->piVars['tid']) > 0) {
+				$dataContent = $this->postlist(intVal($this->piVars['tid']));
+			} elseif (intVal($this->piVars['fid']) > 0) {
+				$dataContent = $this->threadlist(intVal($this->piVars['fid']));
+			} else {
+				$dataContent = $this->forumlist();
+			}
+
+			$this->cache->setCache($dataContent, array('fid'=>$this->piVars['fid'], 'tid'=>$this->piVars['tid']));
+			$content .= $dataContent;
+		} else {
+			$content .= $this->cache->cached_data;
 		}
 
-		//Output
-		if (intVal($this->piVars['tid']) > 0) {
-			$content = $this->postlist(intVal($this->piVars['tid']));
-		} elseif (intVal($this->piVars['fid']) > 0) {
-			$content = $this->threadlist(intVal($this->piVars['fid']));
-		} else {
-			$content = $this->forumlist();
-		}
+		$content = $this->afterCacheSubstitution($content);
 
 		return $content;
 	}
@@ -148,13 +194,37 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 	function forumlist() {
 		$this->getForums();
 
+		$content = $this->view->forumlist($this->forums, $this->sorting['forums']);
+		return $content;
+	}
+
+	function threadlist($forumId) {
+		$forum = new $this->model['forum']($forumId);
+		$this->getThreads($forum);
+
+		$content = $this->view->threadlist($this->threads, $forum, $this->sorting['threads']);
+		return $content;
+	}
+
+	function postlist($threadId) {
+		$thread = new $this->model['thread']($threadId);
+		$forum = new $this->model['forum']($thread->getFid());
+		$this->getPosts($thread);
+
+		$content = $this->view->postlist($this->posts, $thread, $forum, $this->sorting['posts']);
+		return $content;
 	}
 
 
 
 	function getForums() {
-		$where = 'hidden=0 AND deleted=0 AND (starttime<'.mktime().' OR starttime = 0) AND (endtime>'.mktime().' OR endtime=0)';
-		$forums = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'tx_simpleforum_forums', $where, 'sorting');
+		$where = array(
+			'hidden=0',
+			'deleted=0',
+			'(starttime<'.mktime().' OR starttime = 0)',
+			'(endtime>'.mktime().' OR endtime=0)'
+		);
+		$forums = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'tx_simpleforum_forums', implode(' AND ', $where), '', 'sorting');
 
 		$this->forums = array();
 		foreach ($forums as $forum) {
@@ -164,8 +234,17 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 	}
 
 	function getThreads(tx_simpleforum_forum &$forum) {
-		$where = 'hidden=0 AND deleted=0 AND (starttime<'.mktime().' OR starttime = 0) AND (endtime>'.mktime().' OR endtime=0) AND fid='.$forum->getUid();
-		$threads = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'tx_simpleforum_threads', $where, 'lastpost DESC');
+		$where = array(
+			'tx_simpleforum_threads.hidden=0',
+			'tx_simpleforum_threads.deleted=0',
+			'(tx_simpleforum_threads.starttime<'.mktime().' OR tx_simpleforum_threads.starttime = 0)',
+			'(tx_simpleforum_threads.endtime>'.mktime().' OR tx_simpleforum_threads.endtime=0)',
+			'tx_simpleforum_threads.fid='.$forum->getUid(),
+			'tx_simpleforum_threads.uid=tid'
+		);
+		$threads = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
+						'tx_simpleforum_threads.*,tx_simpleforum_posts.crdate AS lastpost',
+						'tx_simpleforum_threads,tx_simpleforum_posts', implode(' AND ', $where), 'tx_simpleforum_threads.uid', 'tx_simpleforum_posts.crdate DESC');
 
 		$this->threads = array();
 		foreach ($threads as $thread) {
@@ -187,6 +266,18 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 
 
 
+	function afterCacheSubstitution($content) {
+
+		$marker = array(
+			'###ADMINICONS###' => '',
+		);
+
+		//if ($this->auth->isAdmin) $maker['###ADMINICONS###'] = $this->view->adminMenu();
+
+		foreach($marker as $label => $value) $content = str_replace($label, $value, $content);
+
+		return $content;
+	}
 
 	/**
 	 *
@@ -225,55 +316,6 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 
 
 
-
-
-
-
-
-
-
-
-	/**
-	 * Updates extension internal cache
-	 *
-	 * @return	void
-	 */
-	function updateAll() {
-		$forums = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid, crdate, topic, description, threadnumber, lastpost, lastpostuser, lastpostusername',
-				'tx_simpleforum_forums', 'hidden=0 AND deleted=0');
-		if (!is_array($forums)) $forums = array();
-
-		foreach ($forums as $forum) {
-			$threads = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,tstamp,crdate,fid,topic,postnumber,lastpost,lastpostusername,lastpostuser,authorname,author,locked,usergroup',
-				'tx_simpleforum_threads', 'hidden=0 AND deleted=0', 'lastpost DESC');
-			if (!is_array($threads)) $threads = array();
-
-			foreach ($threads as $thread) {
-				$this->thread_update($thread['uid']);
-			}
-
-			$this->forum_update($forum['uid']);
-		}
-	}
-
-	/**
-	 * Initiates configuration values and sets additionalHeaderData
-	 *
-	 * @return	void
-	 */
-	function init_dep() {
-
-
-		$this->ts = mktime();
-
-
-		$this->isAdmin = (t3lib_div::inList($GLOBALS['TSFE']->fe_user->user['usergroup'], $this->conf['adminGroup']));
-		if (intval($this->piVars['noadmin']) == 1) $this->isAdmin = false;
-	}
-
-
-
-
 	/**
 	 * Processes form submissions.
 	 *
@@ -283,34 +325,30 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		if ($this->piVars['reply']['submit'] && $this->processSubmission_validate()) {
 
 			if (isset($this->piVars['reply']['title'])) {
-				$threadRecord = $this->thread_createRecord();
-
-				// Insert  record
-				$GLOBALS['TYPO3_DB']->exec_INSERTquery('tx_simpleforum_threads', $threadRecord);
-				$this->piVars['reply']['tid'] = $GLOBALS['TYPO3_DB']->sql_insert_id();
+				$thread = new $this->model['thread']($this->dataNewThread());
+				$thread->updateDatabase();
 			}
 
+			$post = new $this->model['post']($this->dataNewPost());
+			if($thread) $post->setTid($thread->getUid());
+			$post->updateDatabase();
 
-			$postRecord = $this->post_createRecord();
+			if (!$thread) $thread = new $this->model['thread']($post->getTid());
 
-			// Insert  record
-			$GLOBALS['TYPO3_DB']->exec_INSERTquery('tx_simpleforum_posts', $postRecord);
-			$postUid = $GLOBALS['TYPO3_DB']->sql_insert_id();
+			$this->cache->deleteCacheForum($thread->getFid());
+			$this->cache->deleteCacheThread($thread->getUid());
 
-			// Update reference index. This will show in theList view that someone refers to external record.
+			// Update reference index
 			$refindex = t3lib_div::makeInstance('t3lib_refindex');
-			/* @var $refindex t3lib_refindex */
-			$refindex->updateRefIndexTable('tx_simpleforum_posts', $postUid);
+			$refindex->updateRefIndexTable('tx_simpleforum_posts', $post->getUid());
 			$refindex->updateRefIndexTable('tx_simpleforum_threads', intVal($this->piVars['reply']['tid']));
 			$refindex->updateRefIndexTable('tx_simpleforum_forums', intVal($this->piVars['reply']['fid']));
-			$this->thread_update(intVal($this->piVars['reply']['tid']));
-			$this->forum_update(intVal($this->piVars['reply']['fid']));
 		}
 
 	}
 
 	/**
-	 * Validates submitted form. Errors are collected in <code>$this->formValidationErrors</code>
+	 * Validates submitted form.
 	 *
 	 * @return	boolean		true, if form is ok.
 	 */
@@ -353,21 +391,14 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 	 *
 	 * @return	array		new thread record
 	 */
-	function thread_createRecord() {
+	function dataNewThread() {
 		if (isset($this->piVars['reply']['title'])) {
 			// Create record
 			$record = array(
 				'pid' => intVal($this->conf['storagePid']),
 				'fid' => intVal($this->piVars['reply']['fid']),
 				'topic' => $this->piVars['reply']['title'],
-				'postnumber' => 0,
-				'lastpost' => time(),
-				'lastpostusername' => $GLOBALS['TSFE']->fe_user->user['username'],
-				'lastpostuser' => $GLOBALS['TSFE']->fe_user->user['uid'],
-				'authorname' => $GLOBALS['TSFE']->fe_user->user['username'],
 				'author' => $GLOBALS['TSFE']->fe_user->user['uid'],
-				'crdate' => time(),
-				'tstamp' => time(),
 			);
 			return $record;
 		} else {
@@ -380,7 +411,7 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 	 *
 	 * @return	array		new post array
 	 */
-	function post_createRecord() {
+	function dataNewPost() {
 		$isApproved = 1;
 
 		// Create record
@@ -404,57 +435,9 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 
 		if ($info['t'] == 0) {
 			$record['doublepostcheck'] = $double_post_check;
-			$record['crdate'] = $record['tstamp'] = time();
 			return $record;
 		} else {
 			return false;
-		}
-	}
-
-
-	/**
-	 * Updates cached information of a single thread
-	 *
-	 * @param	integer		$threadId: id of thread to be updated
-	 * @return	void
-	 */
-	function thread_update($threadId) {
-		$where = 'hidden=0 AND deleted=0 AND approved=1 AND tid='.intVal($threadId);
-		$posts = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid,crdate,author',
-			'tx_simpleforum_posts', $where, 'crdate DESC');
-
-		if (is_array($posts)) {
-			$user = $this->data_user($posts[0]['author']);
-
-			$record = array(
-				'postnumber' => count($posts),
-				'lastpost' => $posts[0]['crdate'],
-				'lastpostusername' => $user['username'],
-				'lastpostuser' => $user['uid'],
-			);
-			$GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_threads', 'uid='.intVal($threadId),$record);
-		}
-	}
-
-	/**
-	 * Updates cached information of a single forum
-	 *
-	 * @param	integer		$forumId: id of forum to be updated
-	 * @return	void
-	 */
-	function forum_update($forumId) {
-		$where = 'hidden=0 AND deleted=0 AND postnumber>0 AND fid='.intVal($forumId);
-		$threads = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('uid, postnumber, lastpost, lastpostusername, lastpostuser',
-			'tx_simpleforum_threads', $where, 'lastpost DESC');
-
-		if (is_array($threads)) {
-			$record = array(
-				'threadnumber' => count($threads),
-				'lastpost' => $threads[0]['lastpost'],
-				'lastpostusername' => $threads[0]['lastpostusername'],
-				'lastpostuser' => $threads[0]['lastpostuser'],
-			);
-			$GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_simpleforum_forums', 'uid='.intVal($forumId),$record);
 		}
 	}
 

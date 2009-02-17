@@ -40,7 +40,67 @@ class tx_simpleforum_cache {
 	var $scriptRelPath	= 'classes/class.tx_simpleforum_cache.php';	// Path to this script relative to the extension dir.
 	var $extKey			= 'simpleforum';	// The extension key.
 
+	var $cached_data	= '';
+	var $hasCache		= false;
 
+	public function __construct() {
+
+	}
+
+	public function start(&$conf, &$piVars, &$pObj) {
+		$this->piVars = &$piVars;
+		$this->conf = &$conf;
+		$this->pObj = &$pObj;
+		$this->checkArray = array(
+			'fid' => intVal($this->piVars['fid']),
+			'tid' => intVal($this->piVars['tid']),
+			'isAdmin' => $this->pObj->auth->isAdmin,
+		);
+	}
+
+	public function getCache() {
+		$hash = md5(@serialize($this->checkArray).$this->pObj->parentCE);
+		$where = array(
+			'ce_uid=' . $this->pObj->parentCE,
+			'hash=\'' . $hash . '\'',
+			'tstamp>' . (mktime() - intVal($this->conf['cache_expires'])),
+		);
+		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', 'cache_txsimpleforum', implode(' AND ', $where));
+		if ($res) {
+			$row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
+			if (!empty($row)) $this->hasCache = true;
+			$this->cached_data = $row['content'];
+		}
+	}
+
+	public function setCache($content, $arr) {
+		$hash = md5(@serialize($this->checkArray).$this->pObj->parentCE);
+
+		$data = array(
+			'hash' => $hash,
+			'ce_uid' => $this->pObj->parentCE,
+			'fid' => intVal($arr['fid']),
+			'tid' => intVal($arr['tid']),
+			'tstamp' => mktime(),
+			'content' => $content,
+		);
+
+		$this->deleteCacheSingle($data['hash']);
+		$res = $GLOBALS['TYPO3_DB']->exec_INSERTquery('cache_txsimpleforum', $data);
+	}
+
+	public function deleteCacheForum($fid) {
+		$res = $GLOBALS['TYPO3_DB']->exec_DELETEquery('cache_txsimpleforum', 'tid=0 AND fid=' . $fid);
+	}
+
+	public function deleteCacheThread($tid) {
+		$res = $GLOBALS['TYPO3_DB']->exec_DELETEquery('cache_txsimpleforum', 'tid=' . $tid);
+	}
+
+	public function deleteCacheSingle($hash = '') {
+		if ($hash == '') $hash = md5(@serialize($this->checkArray).$this->pObj->parentCE);
+		$res = $GLOBALS['TYPO3_DB']->exec_DELETEquery('cache_txsimpleforum', 'hash=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($hash, 'cache_txsimplefourm'));
+	}
 
 
 }

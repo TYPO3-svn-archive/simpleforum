@@ -4,7 +4,7 @@ if (!defined ('TYPO3_MODE')) 	die ('Access denied.');
 $TCA['tx_simpleforum_forums'] = array (
 	'ctrl' => $TCA['tx_simpleforum_forums']['ctrl'],
 	'interface' => array (
-		'showRecordFieldList' => 'hidden,starttime,endtime,topic,description,postnumber,lastposttime,lastpostuser'
+		'showRecordFieldList' => 'hidden,starttime,endtime,topic,description'
 	),
 	'feInterface' => $TCA['tx_simpleforum_forums']['feInterface'],
 	'columns' => array (
@@ -73,29 +73,9 @@ $TCA['tx_simpleforum_forums'] = array (
 				'maxitems' => 10,
 			)
 		),
-		'threadnumber' => Array (
-			'config' => Array (
-				'type' => 'passthrough',
-			)
-		),
-		'lastpost' => Array (
-			'config' => Array (
-				'type' => 'passthrough',
-			)
-		),
-		'lastpostuser' => Array (
-			'config' => Array (
-				'type' => 'passthrough',
-			)
-		),
-		'lastpostusername' => Array (
-			'config' => Array (
-				'type' => 'passthrough',
-			)
-		),
 	),
 	'types' => array (
-		'0' => array('showitem' => 'hidden;;1;;1-1-1, topic, description, threadnumber, lastpost, lastpostuser, lastpostusername, usergroup')
+		'0' => array('showitem' => 'hidden;;1;;1-1-1, topic, description, usergroup')
 	),
 	'palettes' => array (
 		'1' => array('showitem' => 'starttime, endtime')
@@ -107,7 +87,7 @@ $TCA['tx_simpleforum_forums'] = array (
 $TCA['tx_simpleforum_threads'] = array (
 	'ctrl' => $TCA['tx_simpleforum_threads']['ctrl'],
 	'interface' => array (
-		'showRecordFieldList' => 'hidden,starttime,endtime,fid,topic,replysnumber,replyslast,replyslastname,replyslastuid,authorname,author,locked,usergroup'
+		'showRecordFieldList' => 'hidden,starttime,endtime,fid,topic,author,locked,usergroup'
 	),
 	'feInterface' => $TCA['tx_simpleforum_threads']['feInterface'],
 	'columns' => array (
@@ -168,31 +148,6 @@ $TCA['tx_simpleforum_threads'] = array (
 				'eval' => 'required',
 			)
 		),
-		'postnumber' => Array (
-			'config' => Array (
-				'type' => 'passthrough',
-			)
-		),
-		'lastpost' => Array (
-			'config' => Array (
-				'type' => 'passthrough',
-			)
-		),
-		'lastpostusername' => Array (
-			'config' => Array (
-				'type' => 'passthrough',
-			)
-		),
-		'lastpostuser' => Array (
-			'config' => Array (
-				'type' => 'passthrough',
-			)
-		),
-		'authorname' => Array (
-			'config' => Array (
-				'type' => 'passthrough',
-			)
-		),
 		'author' => Array (
 			'exclude' => 1,
 			'label' => 'LLL:EXT:simpleforum/locallang_db.xml:tx_simpleforum_threads.author',
@@ -226,7 +181,7 @@ $TCA['tx_simpleforum_threads'] = array (
 		),
 	),
 	'types' => array (
-		'0' => array('showitem' => 'hidden;;1;;1-1-1, fid, topic, replysnumber, replyslast, replyslastname, replyslastuid, authorname, author, locked, usergroup')
+		'0' => array('showitem' => 'hidden;;1;;1-1-1, fid, topic, author, locked, usergroup')
 	),
 	'palettes' => array (
 		'1' => array('showitem' => 'starttime, endtime')

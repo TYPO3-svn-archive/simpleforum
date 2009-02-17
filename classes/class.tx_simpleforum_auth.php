@@ -38,12 +38,29 @@
  * @subpackage simpleforum
  */
 class tx_simpleforum_auth {
-	var $prefixId		= 'tx_simpleforum_auth';		// Same as class name
 	var $scriptRelPath	= 'classes/class.tx_simpleforum_auth.php';	// Path to this script relative to the extension dir.
 	var $extKey			= 'simpleforum';	// The extension key.
 
+	public $isAdmin		= false;
 
+	public function __constuct() {
 
+	}
+
+	public function start(&$conf, &$piVars, &$pObj) {
+		$this->piVars = &$piVars;
+		$this->conf = &$conf;
+		$this->pObj = &$pObj;
+
+		$this->getUserRole();
+	}
+
+	public function getUserRole() {
+
+		// Check whether user is admin
+		$this->isAdmin = (t3lib_div::inList($GLOBALS['TSFE']->fe_user->user['usergroup'], $this->conf['adminGroup']));
+		if (intval($this->conf['noadmin']) == 1) $this->isAdmin = false;
+	}
 
 }
 

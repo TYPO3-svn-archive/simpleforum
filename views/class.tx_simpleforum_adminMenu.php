@@ -44,6 +44,83 @@ class tx_simpleforum_adminMenu extends tslib_pibase {
 	var $extKey			= 'simpleforum';	// The extension key.
 
 
+	public function start(&$conf, &$piVars, &$pObj) {
+		$this->cObj = t3lib_div::makeInstance('tslib_cObj');
+		$this->pObj = &$pObj;
+		$this->conf = &$conf;
+		$this->piVars = &$piVars;
+	}
+
+	/**
+	 * Returns admin context menu incl. wrap
+	 *
+	 * @param	array		$conf: configuration array
+	 * @return	string		HTML output
+	 */
+	function output($conf=array()) {
+		if ($this->pObj->auth->isAdmin) {
+			$content = '<a href="#" onclick="txSimpleForumAdminMenu(event, '.$conf['id'].'); return false;" title="'.$this->pObj->pi_getLL('adminMenuTitle').'"><img src="' . $this->conf['adminIcon'] . '" /></a>';
+
+			$items = array(
+				'delete' => array('icon' => 'res/cross.png'),
+				'edit' => array('icon' => 'res/pencil.png'),
+				'hide' => array('icon' => 'res/eye.png'),
+				'move' => array('icon' => 'res/table_go.png'),
+				'lock' => array('icon' => 'res/lock.png'),
+				'unlock' => array('icon' => 'res/lock_open.png'),
+			);
+
+			$content .= $this->adminMenu_getMenu(array('items' => $items, 'show'=>$conf['show'], 'id'=>$conf['id'], 'type' => $conf['type'], 'leftright' => $conf['leftright']));
+		}
+		return $this->cObj->substituteMarker($conf['template'], '###ADMINICONS###', $content);
+	}
+
+	/**
+	 * Returns plain admin context menu
+	 *
+	 * @param	array		$conf: configuration array
+	 * @return	string		HTML output
+	 */
+	function adminMenu_getMenu($conf) {
+		$contextMenu = $this->cObj->getSubpart($this->cObj->fileResource('EXT:simpleforum/res/contextmenu.html'),'###CONTEXTMENU###');
+		$marker = array(
+			'###UID###' => $conf['id'],
+			'###LEFTRIGHT###' => $conf['leftright'],
+		);
+
+		$rowTemplate = $this->cObj->getSubpart($contextMenu, '###ROW###');
+		foreach ($conf['show'] as $label) {
+			$urlParameter = array(
+				'no_cache' => 1,
+				'tx_simpleforum_pi1[adminAction]' => $label,
+				'tx_simpleforum_pi1[type]' => $conf['type'],
+				'tx_simpleforum_pi1[id]' => $conf['id'],
+				'tx_simpleforum_pi1[chk]' => md5($conf['type'] . $conf['id'] . $label . $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey']),
+			);
+			foreach ($urlParameter as $k => $v) {
+				$urlParameterStr .= '&'.$k.'='.$v;
+			}
+			$url = $this->cObj->typoLink_URL(array(
+				'parameter' => $GLOBALS['TSFE']->id,
+				'addQueryString' => 1,
+				'addQueryString.' => array(
+					'exclude' => 'cHash,no_cache',
+				),
+				'additionalParams' => $urlParameterStr,
+				'useCacheHash' => false,
+			));
+			$subMarker = array(
+				'###ICON###' => t3lib_extMgm::siteRelPath('simpleforum') . $conf['items'][$label]['icon'],
+				'###LABEL###' => $this->pObj->pi_getLL('contextmenu_'.$label),
+				'###URL###' => $url,
+			);
+			$rows[] = $this->cObj->substituteMarkerArray($rowTemplate, $subMarker);
+		}
+		$contextMenu = $this->cObj->substituteSubpart($contextMenu, '###ROW###', implode('', $rows));
+		$contextMenu = $this->cObj->substituteMarkerArray($contextMenu, $marker);
+
+		return $contextMenu;
+	}
 
 
 }

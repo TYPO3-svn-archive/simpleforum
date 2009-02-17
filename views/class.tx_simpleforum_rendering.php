@@ -29,14 +29,18 @@
  * @author Peter Schuster <typo3@peschuster.de>
  */
 
+require_once(t3lib_extMgm::extPath('simpleforum', 'views/class.tx_simpleforum_adminMenu.php'));
+require_once(t3lib_extMgm::extPath('simpleforum', 'views/class.tx_simpleforum_form.php'));
+
 /**
- * [DESCRIPTION]
+ * Class for rendering the outputdata
  *
  * @author Peter Schuster <typo3@peschuster.de>
  * @package TYPO3
  * @subpackage simpleforum
  */
 class tx_simpleforum_rendering {
+	var $prefixId		= 'tx_simpleforum_pi1';
 	var $scriptRelPath	= 'views/class.tx_simpleforum_lists.php';	// Path to this script relative to the extension dir.
 	var $extKey			= 'simpleforum';	// The extension key.
 
@@ -57,10 +61,12 @@ class tx_simpleforum_rendering {
 
 
 
-	function forumlist(&$forums) {
+	function forumlist(&$forums, $sorting=array()) {
 		$template = $this->cObj->getSubpart($this->templateCode, '###FORUMLIST###');
 
 		if (!is_array($forums)) $forums = array();
+		if (empty($sorting)) foreach ($forums as $forum) $sorting[] = $forum->getUid();
+
 
 		$marker = array(
 			'###LABEL_TITLE###' => htmlspecialchars($this->conf['title']),
@@ -69,41 +75,46 @@ class tx_simpleforum_rendering {
 		);
 		$temp['titleRow'] = $this->cObj->substituteMarkerArray($this->cObj->getSubpart($template, '###TITLEROW###'), $marker);
 
+
 		$temp['dataTemplate'] = $this->cObj->getSubpart($template, '###DATAROW###');
+
 		$i = 1;
-		foreach ($forums as $forum) {
+		foreach ($sorting as $forumUid) {
+			$forum = $forums[$forumUid];
 
 			$marker = array (
 				'###ALTID###' => $i,
 				'###FORUM_TITLE###' => $this->linkToForum($forum),
 				'###FORUM_DESCRIPTION###' => $forum->getDescription(),
-				'###THREADNUMBER###' => intVal($forum->getThreadnumber()),
-				'###LASTPOST_DATETIME###' => $this->lastModString($forum->getLastpost()),
-				'###LASTPOST_USER###' => $this->linkToUser(tx_simpleforum_user::getInstance($forum->getLastpostuser())),
+				'###THREADNUMBER###' => intVal($forum->getStatistics('threadnumber')),
+				'###LASTPOST_DATETIME###' => $this->lastModString($forum->getStatistics('lastpost')),
+				'###LASTPOST_USER###' => $this->linkToUser(tx_simpleforum_user::getInstance($forum->getStatistics('user'))),
 			);
 
 			$temp['dataRows'][] = $this->cObj->substituteMarkerArray($temp['dataTemplate'], $marker);
 			$i = ($i == 1 ? 2 : 1);
 		}
-		if (!is_array($temp['dataRows'])) $temp['dataRows'] = array();
 
 		$content = $this->cObj->substituteSubpart($template, '###TITLEROW###', $temp['titleRow']);
-		$content = $this->cObj->substituteSubpart($content, '###DATAROW###', implode('', $temp['dataRows']));
+		$content = $this->cObj->substituteSubpart($content, '###DATAROW###', implode('', (is_array($temp['dataRows']) ? $temp['dataRows'] : array())));
 
-		$marker = array(
-			'###INTROTEXT###' => '<p class="introtext">'.$this->conf['introtext'].'</p>',
-		);
-		$content = $this->cObj->substituteMarkerArray($content, $marker);
+		if ($this->conf['introtext']) {
+			$content = $this->cObj->substituteMarker($content,'###INTROTEXT###',$this->cObj->stdWrap($this->conf['introtext'], $this->conf['introtext.']));
+		}
 		return $content;
 	}
 
-	function threadlist(&$threads, &$forum) {
+	function threadlist(&$threads, &$forum, $sorting=array()) {
 		$template = $this->cObj->getSubpart($this->templateCode, '###THREADLIST###');
 
 		if (!is_array($threads)) $threads = array();
+		if (empty($sorting)) foreach ($threads as $thread) $sorting[] = $thread->getUid();
 
+		$breadcrumb = $this->breadcrumb($forum);
 
-		$breadcrumb = $this->breadcrumb(array('fid'=>$forumId), $forum);
+		$formClass = t3lib_div::makeInstanceClassName('tx_simpleforum_form');
+		$this->form = new $formClass($this->pObj, $this->templateCode);
+
 
 		$marker = array(
 			'###THREADTITLE###' => $forum->getTopic(),
@@ -114,14 +125,15 @@ class tx_simpleforum_rendering {
 			'###LABEL_AUTHOR###' => $this->pObj->pi_getLL('L_Author'),
 			'###LABEL_LASTPOST###' => $this->pObj->pi_getLL('L_LastPost'),
 			'###PAGEBROWSER###' => '',
-			'###NEWTHREADFORM###' => $this->form(array('fid' => $forum['uid'])),
+			'###NEWTHREADFORM###' => $this->form->output($forum),
 		);
 		$temp['titleRow'] = $this->cObj->substituteMarkerArray($this->cObj->getSubpart($template, '###TITLEROW###'), $marker);
 
 		$temp['dataTemplate'] = $this->cObj->getSubpart($template, '###DATAROW###');
 		$i = 1;
-		foreach ($threads as $thread) {
-			if (intVal($thread->getPostnumber()) == 0) continue;
+		foreach ($sorting as $threadUid) {
+			$thread = $threads[$threadUid];
+			if (intVal($thread->getStatistics('postnumber')) == 0) continue;
 
 			$specialIcon = '';
 			if ($thread->isLocked()) {
@@ -133,19 +145,20 @@ class tx_simpleforum_rendering {
 				'###SPECIALICON###' => $specialIcon,
 				'###THREADTITLE###' => $this->linkToThread($thread),
 				'###AUTHOR###' => $this->linkToUser(tx_simpleforum_user::getInstance($thread->getAuthor())),
-				'###POSTSNUMBER###' => $thread->getPostnumber(),
-				'###LASTPOST_DATETIME###' => $this->lastModString($thread->getLastpost()),
-				'###LASTPOST_USER###' => $this->linkToUser(tx_simpleforum_user::getInstance($thread->getLastpostuser())),
+				'###POSTSNUMBER###' => ($thread->getStatistics('postnumber')-1),
+				'###LASTPOST_DATETIME###' => $this->lastModString($thread->getStatistics('lastpost')),
+				'###LASTPOST_USER###' => $this->linkToUser(tx_simpleforum_user::getInstance($thread->getStatistics('user'))),
 			);
 
 			$rowContent = $this->cObj->substituteMarkerArray($temp['dataTemplate'], $markerSub);
 
+
 			$confArr = array(
-					'template' => $this->cObj->getSubpart($temp['dataTemplate'], '###ADMINMENU###'),
-					'id' => $thread->getUid(),
-					'show' => array('delete','move'),
-					'type' => 'thread',
-					'leftright' => 'left'
+				'template' => $this->cObj->getSubpart($temp['dataTemplate'], '###ADMINMENU###'),
+				'id' => $thread->getUid(),
+				'show' => array('delete','move'),
+				'type' => 'thread',
+				'leftright' => 'left'
 			);
 			if ($thread->isLocked()) {
 				$confArr['show'][] = 'unlock';
@@ -153,9 +166,8 @@ class tx_simpleforum_rendering {
 				$confArr['show'][] = 'lock';
 			}
 			$adminMenu = $this->adminMenu($confArr);
-			$rowContent = $this->cObj->substituteSubpart($rowContent, '###ADMINMENU###', $adminMenu);
+			$temp['dataRows'][] = $this->cObj->substituteSubpart($rowContent, '###ADMINMENU###', $adminMenu);
 
-			$temp['dataRows'][] = $rowContent;
 			$i = ($i == 1 ? 2 : 1);
 		}
 		if (!is_array($temp['dataRows'])) $temp['dataRows'] = array();
@@ -166,12 +178,13 @@ class tx_simpleforum_rendering {
 		return $content;
 	}
 
-	function postlist(&$posts, &$thread, &$forum) {
+	function postlist(&$posts, &$thread, &$forum, $sorting=array()) {
 		$template = $this->cObj->getSubpart($this->templateCode, '###MESSAGELIST###');
 
 		if (!is_array($posts)) $posts = array();
+		if (empty($sorting)) foreach ($posts as $post) $sorting[] = $post->getUid();
 
-		$breadcrumb = $this->breadcrumb(array('tid'=>$threadId), $forum, $thread);
+		$breadcrumb = $this->breadcrumb($forum, $thread);
 
 		$marker = array(
 			'###THREADTITLE###' => $thread->getTopic(),
@@ -189,11 +202,13 @@ class tx_simpleforum_rendering {
 			$this->smilieApi = t3lib_div::makeInstance('tx_smilie');
 		}
 
-
+		$formClass = t3lib_div::makeInstanceClassName('tx_simpleforum_form');
+		$this->form = new $formClass($this->pObj, $this->templateCode);
 
 		$temp['dataTemplate'] = $this->cObj->getSubpart($template, '###DATAROW###');
 		$i = 1;
-		foreach ($posts as $post) {
+		foreach ($sorting as $postUid) {
+			$post = $posts[$postUid];
 
 			$message = htmlspecialchars($post->getMessage());
 			$message = nl2br($this->smilieApi ? $this->smilieApi->replaceSmilies($message) : $message);
@@ -203,7 +218,7 @@ class tx_simpleforum_rendering {
 			$markerSub = array(
 				'###ALTID###' => $i,
 				'###AUTHOR###' => $this->linkToUser($user),
-				'###AUTHOR_IMAGE###' => $this->serImage($user, 45, 63, $this->conf['altUserIMG']),
+				'###AUTHOR_IMAGE###' => $this->userImage($user, 45, 63, $this->conf['altUserIMG']),
 				'###DATETIME###' => strftime($this->conf['strftime'], $post->getCrdate()),
 				'###MESSAGE###' => $message,
 			);
@@ -218,20 +233,30 @@ class tx_simpleforum_rendering {
 					'leftright' => 'right'
 			);
 			$adminMenu = $this->adminMenu($confArr);
-			$rowContent = $this->cObj->substituteSubpart($rowContent, '###ADMINMENU###', $adminMenu);
+			$temp['dataRows'][] = $this->cObj->substituteSubpart($rowContent, '###ADMINMENU###', $adminMenu);
 
-			$temp['dataRows'][] = $rowContent;
 			$i = ($i == 1 ? 2 : 1);
 		}
 		if (!is_array($temp['dataRows'])) $temp['dataRows'] = array();
 
 		$content = $this->cObj->substituteSubpart($template, '###TITLEROW###', $temp['titleRow']);
 		$content = $this->cObj->substituteSubpart($content, '###DATAROW###', implode('', $temp['dataRows']));
-		$content = $this->cObj->substituteSubpart($content, '###REPLYBOX###', $this->form(array('tid' => $thread['uid'], 'fid' => $thread['fid'])));
+		$content = $this->cObj->substituteSubpart($content, '###REPLYBOX###', $this->form->output($forum, $thread));
 		$content = $this->cObj->substituteMarkerArray($content, $marker);
 		return $content;
 	}
 
+
+
+	function adminMenu($conf) {
+
+		if (!$this->adminMenuClass) {
+			$adminMenuClass = t3lib_div::makeInstanceClassName('tx_simpleforum_adminMenu');
+			$this->adminMenuClass = new $adminMenuClass();
+			$this->adminMenuClass->start($this->conf, $this->piVars, $this->pObj);
+		}
+		return $this->adminMenuClass->output($conf);
+	}
 
 
 	/**
@@ -240,14 +265,16 @@ class tx_simpleforum_rendering {
 	 * @param	array		$conf: array with thread-/forum-id
 	 * @return	string		HTML output
 	 */
-	function breadcrumb($conf, $forum=null, $thread=null) {
-		$temp[] = $this->pi_linkToPage(htmlspecialchars($this->conf['title']),$GLOBALS['TSFE']->id);
+	function breadcrumb($forum=null, $thread=null) {
+		$temp[] = $this->cObj->typoLink(
+			htmlspecialchars($this->conf['title']),
+			array('parameter'=>$GLOBALS['TSFE']->id, 'useCacheHash' => true));
 
-		if ($conf['tid']) {
-			$temp[] = $this->linkToForum($forum->getUid());
-			$temp[] = $this->linkToThread($thread->getUid());
-		} elseif ($conf['fid']) {
-			$temp[] = $this->linkToForum($forum->getUid());
+		if ($thread === null) {
+			$temp[] = $this->linkToForum($forum);
+		} else {
+			$temp[] = $this->linkToForum($forum);
+			$temp[] = $this->linkToThread($thread);
 		}
 
 		$content = implode(' &gt;&gt ', $temp);
@@ -295,7 +322,7 @@ class tx_simpleforum_rendering {
 	function userImage(tx_simpleforum_user $user, $width, $height,$altIMG='') {
 		if (!($this->cObj)) $this->cObj = t3lib_div::makeInstance('tslib_cObj');
 		if ($height == '') {
-			if (!empty($user->image)) {
+			if ($user->image != '') {
 				$imgConf['file'] = 'uploads/tx_srfeuserregister/'.$user->image;
 			} else {
 				$imgConf['file'] = $altIMG;
@@ -309,7 +336,7 @@ class tx_simpleforum_rendering {
 			$imgConf['file.']['format'] = 'jpg';
 			$imgConf['file.']['quality'] = '90';
 			$imgConf['file.']['10'] = 'IMAGE';
-			if (!empty($user->image)) {
+			if ($user->image != '') {
 				$imgConf['file.']['10.']['file'] = 'uploads/tx_srfeuserregister/'.$user->image;
 			} else {
 				$imgConf['file.']['10.']['file'] = $altIMG;
@@ -333,7 +360,7 @@ class tx_simpleforum_rendering {
 	 */
 	function linkToUser(tx_simpleforum_user $user) {
 		$content = $this->cObj->typoLink(
-			$username = $user->username,
+			$user->username,
 			array(
 				'parameter' => $this->conf['profilePID'],
 				'useCacheHash' => true,
@@ -375,7 +402,7 @@ class tx_simpleforum_rendering {
 			array(
 				'parameter' => $GLOBALS['TSFE']->id,
 				'useCacheHash' => true,
-				'additionalParams' => t3lib_div::implodeArrayForUrl($this->prefixId, array('fid'=>$thread->getUid())),
+				'additionalParams' => t3lib_div::implodeArrayForUrl($this->prefixId, array('tid'=>$thread->getUid())),
 			)
 		);
 		return $content;

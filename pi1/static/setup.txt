@@ -9,4 +9,6 @@ plugin.tx_simpleforum_pi1 {
 	lockedIcon = EXT:simpleforum/res/lock.png
 	adminIcon = EXT:simpleforum/res/cog.png
 	adminGroup = 4
+	introtext.stdWrap.wrap = <p class="introtext">|</p>
+	cache_expires = 1800
 }

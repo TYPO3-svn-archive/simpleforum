@@ -57,6 +57,8 @@ class tx_simpleforum_forum {
 	 */
 	protected $origArray = array();
 
+	protected $statistics = array();
+
 	/**
 	 * Creates forum object
 	 *
@@ -111,7 +113,7 @@ class tx_simpleforum_forum {
 	/**
 	 * Set uid of forum
 	 *
-	 * @param	integer		$uid: uid of photo db record
+	 * @param	integer		$uid: uid of forum db record
 	 */
 	protected function setUid($uid) {
 		$this->row['uid'] = $uid;
@@ -119,7 +121,7 @@ class tx_simpleforum_forum {
 
 
 	public function getDeleted() {
-		return ($this->row['deleted'] == 1 ? true : false);
+		return ($this->row['deleted'] == 1);
 	}
 	public function delete() {
 		$this->row['deleted'] = 1;
@@ -130,7 +132,7 @@ class tx_simpleforum_forum {
 
 
 	public function getHidden() {
-		return ($this->row['hidden'] == 1 ? true : false);
+		return ($this->row['hidden'] == 1);
 	}
 	public function hide() {
 		$this->row['hidden'] = 1;
@@ -192,11 +194,22 @@ class tx_simpleforum_forum {
 	}
 
 
-	public function updateReferences() {
-		//threadnumber 	lastpost 	lastpostuser 	lastpostusername
+	public function getStatistics($name) {
+		$pattern = array('user', 'lastpost', 'threadnumber');
+		if (!in_array($name, $pattern)) return false;
+
+		$columns = array('user' => 'author', 'lastpost' => 'crdate', 'threadnumber' => 'COUNT(uid)');
+
+		if (!isset($this->statistics[$name])) {
+			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery($columns[$name], 'tx_simpleforum_posts', 'tid IN (SELECT uid FROM tx_simpleforum_threads WHERE fid=' . $this->row['uid'] . ') AND deleted=0 AND hidden=0 AND approved=1', '', 'crdate DESC', '1');
+			if ($res) {
+				$row = $GLOBALS['TYPO3_DB']->sql_fetch_row($res);
+				$this->statistics[$name] = $row[0];
+			}
+		}
+
+		return $this->statistics[$name];
 	}
-
-
 }
 
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/simpleforum/model/class.tx_simpleforum_forum.php'])	{

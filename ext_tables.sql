@@ -14,11 +14,6 @@ CREATE TABLE tx_simpleforum_forums (
 	endtime int(11) DEFAULT '0' NOT NULL,
 	topic tinytext NOT NULL,
 	description tinytext NOT NULL,
-	threadnumber int(11) DEFAULT '0' NOT NULL,
-	lastpost tinytext NOT NULL,
-	lastpostuser int(11) DEFAULT '0' NOT NULL,
-	lastpostusername tinytext NOT NULL,
-	usergroup tinytext NOT NULL,
 	PRIMARY KEY (uid),
 	KEY parent (pid)
 );
@@ -40,11 +35,6 @@ CREATE TABLE tx_simpleforum_threads (
 	endtime int(11) DEFAULT '0' NOT NULL,
 	fid int(11) DEFAULT '0' NOT NULL,
 	topic tinytext NOT NULL,
-	postnumber tinytext NOT NULL,
-	lastpost tinytext NOT NULL,
-	lastpostuser int(11) DEFAULT '0' NOT NULL,
-	lastpostusername tinytext NOT NULL,
-	authorname tinytext NOT NULL,
 	author int(11) DEFAULT '0' NOT NULL,
 	locked tinyint(3) DEFAULT '0' NOT NULL,
 	usergroup tinytext NOT NULL,
@@ -75,4 +65,21 @@ CREATE TABLE tx_simpleforum_posts (
 
 	PRIMARY KEY (uid),
 	KEY parent (pid)
+);
+
+
+
+#
+# Table structure for table 'cache_txsimpleforum'
+#
+CREATE TABLE cache_txsimpleforum (
+	hash varchar(32) DEFAULT '' NOT NULL,
+	ce_uid int(11) DEFAULT '0' NOT NULL,
+	tid int(11) DEFAULT '0' NOT NULL,
+	fid int(11) DEFAULT '0' NOT NULL,
+	tstamp int(11) DEFAULT '0' NOT NULL,
+	content mediumtext,
+
+	PRIMARY KEY (hash),
+	KEY parent (ce_uid)
 );
