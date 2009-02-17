@@ -371,8 +371,11 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		if (!$this->piVars['reply']['message']) {
 			$errorCount++;
 		}
-
 		if (!$this->piVars['reply']['title'] && !$this->piVars['reply']['tid']) {
+			$errorCount++;
+		}
+
+		if (!empty($this->piVars['reply']['homepage'])) {
 			$errorCount++;
 		}
 

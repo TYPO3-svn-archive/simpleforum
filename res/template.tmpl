@@ -114,6 +114,7 @@
 		<h3>###LABEL_REPLYTO###: ###THREADTITLE###</h3>
 		<input type="hidden" name="tx_simpleforum_pi1[reply][fid]" value="###FID###" id="ForumID" />
 		<input type="hidden" name="tx_simpleforum_pi1[reply][tid]" value="###TID###" id="ThreadID" />
+		<input type="text" name="tx_simpleforum_pi1[reply][homepage]" value="" id="ForumURL" style="display: none;" />
 		<textarea id="tx-simpleforum-pi1-reply-message" name="tx_simpleforum_pi1[reply][message]" cols="90" rows="8">###V_MESSAGE###</textarea><br />
 		<input type="submit" name="tx_simpleforum_pi1[reply][submit]" value="###L_SUBMIT###" />
 	</form>
@@ -126,6 +127,7 @@
 	<form id="tx-simpleforum-pi1-replybox" action="###ACTION_URL###" name="tx_simpleforum_pi1[reply]" method="post">
 		<h3>###L_NEW_THREAD###</h3>
 		<input type="hidden" name="tx_simpleforum_pi1[reply][fid]" value="###FID###" id="ForumID" />
+		<input type="text" name="tx_simpleforum_pi1[reply][homepage]" value="" id="ForumURL" style="display: none;" />
 		<label for="tx-simpleforum-pi1-reply-title">###L_THREADTITLE###:</label> <input type="text" value="###V_THREADTITLE###" name="tx_simpleforum_pi1[reply][title]" id="tx-simpleforum-pi1-reply-title" /><br />
 		<textarea id="tx-simpleforum-pi1-reply-message" name="tx_simpleforum_pi1[reply][message]" cols="90" rows="8">###V_MESSAGE###</textarea><br />
 		<input type="submit" name="tx_simpleforum_pi1[reply][submit]" value="###L_SUBMIT###" />

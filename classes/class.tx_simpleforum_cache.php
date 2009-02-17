@@ -55,6 +55,7 @@ class tx_simpleforum_cache {
 			'fid' => intVal($this->piVars['fid']),
 			'tid' => intVal($this->piVars['tid']),
 			'isAdmin' => $this->pObj->auth->isAdmin,
+			'loginState' => $GLOBALS['TSFE']->loginUser,
 		);
 	}
 
