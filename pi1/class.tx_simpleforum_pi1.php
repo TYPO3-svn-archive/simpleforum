@@ -243,8 +243,8 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 			'tx_simpleforum_threads.uid=tid'
 		);
 		$threads = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
-						'tx_simpleforum_threads.*,tx_simpleforum_posts.crdate AS lastpost',
-						'tx_simpleforum_threads,tx_simpleforum_posts', implode(' AND ', $where), 'tx_simpleforum_threads.uid', 'tx_simpleforum_posts.crdate DESC');
+						'tx_simpleforum_threads.*,MAX(tx_simpleforum_posts.crdate) AS lastpost',
+						'tx_simpleforum_threads,tx_simpleforum_posts', implode(' AND ', $where), 'tx_simpleforum_threads.uid', 'lastpost DESC');
 
 		$this->threads = array();
 		foreach ($threads as $thread) {
@@ -268,6 +268,8 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 
 	function afterCacheSubstitution($content) {
 
+		$content = $this->replaceDateStrings($content);
+		
 		$marker = array(
 			'###ADMINICONS###' => '',
 		);
@@ -275,10 +277,52 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		//if ($this->auth->isAdmin) $maker['###ADMINICONS###'] = $this->view->adminMenu();
 
 		foreach($marker as $label => $value) $content = str_replace($label, $value, $content);
-
+		
+		return $content;
+	}
+	
+	function replaceDateStrings($content) {
+		$pattern = '%%%##%%(\d+)%%##%%%';
+		$matches = array();
+		preg_match_all('/' . $pattern . '/', $content, $matches);
+		foreach ($matches[1] as $key => $date) {
+			$content = str_replace($matches[0][$key], $this->lastModString($date), $content);
+		}
 		return $content;
 	}
 
+	/**
+	 * Returns formarted string with 'last modified date'
+	 *
+	 * @param	integer		$lastModTs: timestamp on which calculation is based
+	 * @return	string		formarted timespan/date
+	 */
+	function lastModString($lastModTs) {
+		$lastModTs = intVal($lastModTs);
+		$diff = time() - $lastModTs;
+
+		if ($diff < (60*60)) {
+			//Angabe in Minuten
+			$content = round(($diff/60),0);
+			$content = $this->pi_getLL('lastmod_pre') . ' ' . $content . ' ' . ($content == 1 ? $this->pi_getLL('minutes_single') : $this->pi_getLL('minutes'));
+		} elseif ($diff < ((60*60*24))) {
+			//Angabe in Stunden
+			$content = round(($diff/(60*60)),0);
+			$content = $this->pi_getLL('lastmod_pre') . ' ' . $content . ' ' . ($content == 1 ? $this->pi_getLL('hours_single') : $this->pi_getLL('hours'));
+		} elseif ($diff < ((60*60*24*5))) {
+			//Angabe in Tagen
+			$content = round(($diff/(60*60*24)),0);
+			$content = $this->pi_getLL('lastmod_pre') . ' ' . $content . ' ' . ($content == 1 ? $this->pi_getLL('days_single') : $this->pi_getLL('days'));
+		} else {
+			//Datum augeben
+			$content = strftime($this->conf['strftime'], $lastModTs);
+		}
+		return $content;
+	}
+	
+	
+	
+	
 	/**
 	 *
 	 * HELPER FUNCTIONS

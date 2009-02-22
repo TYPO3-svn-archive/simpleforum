@@ -87,7 +87,7 @@ class tx_simpleforum_rendering {
 				'###FORUM_TITLE###' => $this->linkToForum($forum),
 				'###FORUM_DESCRIPTION###' => $forum->getDescription(),
 				'###THREADNUMBER###' => intVal($forum->getStatistics('threadnumber')),
-				'###LASTPOST_DATETIME###' => $this->lastModString($forum->getStatistics('lastpost')),
+				'###LASTPOST_DATETIME###' => $this->wrapDateString($forum->getStatistics('lastpost')),
 				'###LASTPOST_USER###' => $this->linkToUser(tx_simpleforum_user::getInstance($forum->getStatistics('user'))),
 			);
 
@@ -146,7 +146,7 @@ class tx_simpleforum_rendering {
 				'###THREADTITLE###' => $this->linkToThread($thread),
 				'###AUTHOR###' => $this->linkToUser(tx_simpleforum_user::getInstance($thread->getAuthor())),
 				'###POSTSNUMBER###' => ($thread->getStatistics('postnumber')-1),
-				'###LASTPOST_DATETIME###' => $this->lastModString($thread->getStatistics('lastpost')),
+				'###LASTPOST_DATETIME###' => $this->wrapDateString($thread->getStatistics('lastpost')),
 				'###LASTPOST_USER###' => $this->linkToUser(tx_simpleforum_user::getInstance($thread->getStatistics('user'))),
 			);
 
@@ -349,6 +349,9 @@ class tx_simpleforum_rendering {
 		return $myImage;
 	}
 
+	function wrapDateString($date) {
+		return '%%%##%%' . $date . '%%##%%%';
+	}
 
 
 	/**

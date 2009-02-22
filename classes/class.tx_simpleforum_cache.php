@@ -92,10 +92,12 @@ class tx_simpleforum_cache {
 
 	public function deleteCacheForum($fid) {
 		$res = $GLOBALS['TYPO3_DB']->exec_DELETEquery('cache_txsimpleforum', 'tid=0 AND fid=' . $fid);
+		$res = $GLOBALS['TYPO3_DB']->exec_DELETEquery('cache_txsimpleforum', 'tid=0 AND fid=0');
 	}
 
 	public function deleteCacheThread($tid) {
 		$res = $GLOBALS['TYPO3_DB']->exec_DELETEquery('cache_txsimpleforum', 'tid=' . $tid);
+		$res = $GLOBALS['TYPO3_DB']->exec_DELETEquery('cache_txsimpleforum', 'tid=0 AND fid=0');
 	}
 
 	public function deleteCacheSingle($hash = '') {

@@ -199,9 +199,16 @@ class tx_simpleforum_forum {
 		if (!in_array($name, $pattern)) return false;
 
 		$columns = array('user' => 'author', 'lastpost' => 'crdate', 'threadnumber' => 'COUNT(uid)');
+		$groupBy = array('user' => '', 'lastpost' => '', 'threadnumber' => 'tid');
 
 		if (!isset($this->statistics[$name])) {
-			$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery($columns[$name], 'tx_simpleforum_posts', 'tid IN (SELECT uid FROM tx_simpleforum_threads WHERE fid=' . $this->row['uid'] . ') AND deleted=0 AND hidden=0 AND approved=1', '', 'crdate DESC', '1');
+			switch ($name) {
+				CASE 'threadnumber':
+					$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery($columns[$name], 'tx_simpleforum_threads', 'fid=' . $this->row['uid'] . ' AND deleted=0 AND hidden=0', '', 'crdate DESC', '1');
+					break;
+				default:
+				$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery($columns[$name], 'tx_simpleforum_posts', 'tid IN (SELECT uid FROM tx_simpleforum_threads WHERE fid=' . $this->row['uid'] . ') AND deleted=0 AND hidden=0 AND approved=1', $groupBy[$name], 'crdate DESC', '1');
+			}
 			if ($res) {
 				$row = $GLOBALS['TYPO3_DB']->sql_fetch_row($res);
 				$this->statistics[$name] = $row[0];
