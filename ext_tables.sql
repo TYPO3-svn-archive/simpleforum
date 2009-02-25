@@ -77,6 +77,7 @@ CREATE TABLE cache_txsimpleforum (
 	ce_uid int(11) DEFAULT '0' NOT NULL,
 	tid int(11) DEFAULT '0' NOT NULL,
 	fid int(11) DEFAULT '0' NOT NULL,
+	page int(11) DEFAULT '0' NOT NULL,
 	tstamp int(11) DEFAULT '0' NOT NULL,
 	content mediumtext,
 

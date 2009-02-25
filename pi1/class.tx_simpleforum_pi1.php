@@ -104,6 +104,9 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 
 		$this->pi_initPIflexForm();
 		$this->fetchConfigValue('introtext');
+		$this->conf['pageSize'] = 20;
+		$this->startRecord = 0;
+		$this->piVars['page'] = intVal($this->piVars['page']);
 
 		if (!$this->conf['templateFile']) $this->conf['templateFile'] = 'EXT:simpleforum/res/template.tmpl';
 		$this->templateCode = $this->cObj->fileResource($this->conf['templateFile']);
@@ -200,6 +203,8 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 
 	function threadlist($forumId) {
 		$forum = new $this->model['forum']($forumId);
+
+		$this->initPagebrowserThreads($forum);
 		$this->getThreads($forum);
 
 		$content = $this->view->threadlist($this->threads, $forum, $this->sorting['threads']);
@@ -209,6 +214,8 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 	function postlist($threadId) {
 		$thread = new $this->model['thread']($threadId);
 		$forum = new $this->model['forum']($thread->getFid());
+
+		$this->initPagebrowserPosts($thread);
 		$this->getPosts($thread);
 
 		$content = $this->view->postlist($this->posts, $thread, $forum, $this->sorting['posts']);
@@ -233,18 +240,22 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		}
 	}
 
-	function getThreads(tx_simpleforum_forum &$forum) {
+	function getThreadsWhere(tx_simpleforum_forum &$forum) {
 		$where = array(
 			'tx_simpleforum_threads.hidden=0',
 			'tx_simpleforum_threads.deleted=0',
-			'(tx_simpleforum_threads.starttime<'.mktime().' OR tx_simpleforum_threads.starttime = 0)',
+			'(tx_simpleforum_threads.starttime<'.mktime().' OR tx_simpleforum_threads.starttime=0)',
 			'(tx_simpleforum_threads.endtime>'.mktime().' OR tx_simpleforum_threads.endtime=0)',
 			'tx_simpleforum_threads.fid='.$forum->getUid(),
-			'tx_simpleforum_threads.uid=tid'
 		);
+		return implode(' AND ', $where);
+	}
+
+	function getThreads(tx_simpleforum_forum &$forum) {
+
 		$threads = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows(
 						'tx_simpleforum_threads.*,MAX(tx_simpleforum_posts.crdate) AS lastpost',
-						'tx_simpleforum_threads,tx_simpleforum_posts', implode(' AND ', $where), 'tx_simpleforum_threads.uid', 'lastpost DESC');
+						'tx_simpleforum_threads,tx_simpleforum_posts', $this->getThreadsWhere($forum) . ' AND tx_simpleforum_threads.uid=tid', 'tx_simpleforum_threads.uid', 'lastpost DESC', $this->startRecord . ',' . $this->conf['pageSize']);
 
 		$this->threads = array();
 		foreach ($threads as $thread) {
@@ -255,7 +266,7 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 
 	function getPosts(tx_simpleforum_thread &$thread) {
 		$where = 'approved=1 AND hidden=0 AND deleted=0 AND tid='.$thread->getUid();
-		$posts = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'tx_simpleforum_posts', $where, 'crdate ASC');
+		$posts = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'tx_simpleforum_posts', $where, '', 'crdate ASC', $this->startRecord . ',' . $this->conf['pageSize']);
 
 		$this->posts = array();
 		foreach ($posts as $post) {
@@ -266,10 +277,37 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 
 
 
+	function initPagebrowserThreads(tx_simpleforum_forum &$forum) {
+		$where = $this->getThreadsWhere($forum);
+		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('COUNT(uid)',
+					'tx_simpleforum_threads', $where);
+		if ($res) {
+			$temp = $GLOBALS['TYPO3_DB']->sql_fetch_row($res);
+			$this->numberOfPages = $temp[0];
+		}
+
+		$rpp = $this->conf['pageSize'];
+		$this->startRecord = $rpp*intval($this->piVars['page']);
+	}
+
+	function initPagebrowserPosts(tx_simpleforum_thread &$thread) {
+		$where = 'approved=1 AND hidden=0 AND deleted=0 AND tid='.$thread->getUid();
+		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('COUNT(uid)',
+					'tx_simpleforum_posts', $where);
+		if ($res) {
+			$temp = $GLOBALS['TYPO3_DB']->sql_fetch_row($res);
+			$this->numberOfPages = $temp[0];
+		}
+
+		$rpp = $this->conf['pageSize'];
+		$this->startRecord = $rpp*intval($this->piVars['page']);
+	}
+
+
 	function afterCacheSubstitution($content) {
 
 		$content = $this->replaceDateStrings($content);
-		
+
 		$marker = array(
 			'###ADMINICONS###' => '',
 		);
@@ -277,10 +315,10 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		//if ($this->auth->isAdmin) $maker['###ADMINICONS###'] = $this->view->adminMenu();
 
 		foreach($marker as $label => $value) $content = str_replace($label, $value, $content);
-		
+
 		return $content;
 	}
-	
+
 	function replaceDateStrings($content) {
 		$pattern = '%%%##%%(\d+)%%##%%%';
 		$matches = array();
@@ -319,10 +357,10 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 		}
 		return $content;
 	}
-	
-	
-	
-	
+
+
+
+
 	/**
 	 *
 	 * HELPER FUNCTIONS
@@ -351,11 +389,6 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 			}
 		}
 	}
-
-
-
-
-
 
 
 

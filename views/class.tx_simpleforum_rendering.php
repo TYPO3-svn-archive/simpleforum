@@ -124,7 +124,7 @@ class tx_simpleforum_rendering {
 			'###LABEL_REPLYS###' => $this->pObj->pi_getLL('L_Replys'),
 			'###LABEL_AUTHOR###' => $this->pObj->pi_getLL('L_Author'),
 			'###LABEL_LASTPOST###' => $this->pObj->pi_getLL('L_LastPost'),
-			'###PAGEBROWSER###' => '',
+			'###PAGEBROWSER###' => $this->getListGetPageBrowser($this->pObj->numberOfPages),
 			'###NEWTHREADFORM###' => $this->form->output($forum),
 		);
 		$temp['titleRow'] = $this->cObj->substituteMarkerArray($this->cObj->getSubpart($template, '###TITLEROW###'), $marker);
@@ -192,7 +192,7 @@ class tx_simpleforum_rendering {
 			'###NAVBAR###' => '',
 			'###LABEL_AUTHOR###' => $this->pObj->pi_getLL('L_Author'),
 			'###LABEL_MESSAGE###' => $this->pObj->pi_getLL('L_Message'),
-			'###PAGEBROWSER###' => '',
+			'###PAGEBROWSER###' => $this->getListGetPageBrowser($this->pObj->numberOfPages),
 		);
 		$temp['titleRow'] = $this->cObj->substituteMarkerArray($this->cObj->getSubpart($template, '###TITLEROW###'), $marker);
 
@@ -362,14 +362,20 @@ class tx_simpleforum_rendering {
 	 * @return	string		HTML output
 	 */
 	function linkToUser(tx_simpleforum_user $user) {
-		$content = $this->cObj->typoLink(
-			$user->username,
-			array(
-				'parameter' => $this->conf['profilePID'],
-				'useCacheHash' => true,
-				'additionalParams' => '&'.$this->conf['profileParam'].'='.$user->uid
-			)
-		);
+		if ($user->username == '') {
+			$content = '<em>anonym</em>';
+		} elseif ($user->deleted == 1) {
+			$content = '<em>' . $user->username . '</em>';
+		} else {
+			$content = $this->cObj->typoLink(
+				$user->username,
+				array(
+					'parameter' => $this->conf['profilePID'],
+					'useCacheHash' => true,
+					'additionalParams' => '&'.$this->conf['profileParam'].'='.$user->uid
+				)
+			);
+		}
 		return $content;
 	}
 
@@ -411,6 +417,24 @@ class tx_simpleforum_rendering {
 		return $content;
 	}
 
+
+	function getListGetPageBrowser($numberOfPages) {
+		// Get default configuration
+		$conf = $GLOBALS['TSFE']->tmpl->setup['plugin.']['tx_pagebrowse_pi1.'];
+
+		// Modify this configuration
+		$conf += array(
+				'pageParameterName' => $this->prefixId . '|page',
+				'numberOfPages' => intval($numberOfPages/$this->conf['pageSize']) +
+						(($numberOfPages % $this->conf['pageSize']) == 0 ? 0 : 1),
+		);
+
+		// Get page browser
+		$cObj = t3lib_div::makeInstance('tslib_cObj');
+		/* @var $cObj tslib_cObj */
+		$cObj->start(array(), '');
+		return $cObj->cObjGetSingle('USER', $conf);
+	}
 }
 
 if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/simpleforum/views/class.tx_simpleforum_rendering.php'])	{

@@ -56,6 +56,7 @@ class tx_simpleforum_cache {
 			'tid' => intVal($this->piVars['tid']),
 			'isAdmin' => $this->pObj->auth->isAdmin,
 			'loginState' => $GLOBALS['TSFE']->loginUser,
+			'page' => $this->piVars['page'],
 		);
 	}
 
@@ -82,6 +83,7 @@ class tx_simpleforum_cache {
 			'ce_uid' => $this->pObj->parentCE,
 			'fid' => intVal($arr['fid']),
 			'tid' => intVal($arr['tid']),
+			'page' => intVal($this->piVars['page']),
 			'tstamp' => mktime(),
 			'content' => $content,
 		);

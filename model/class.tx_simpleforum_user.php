@@ -46,7 +46,7 @@ class tx_simpleforum_user {
 	protected $origRow = array();
 
 	protected function __construct($userId) {
-		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid,username,name,first_name,last_name,showname,image',
+		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('uid,username,name,first_name,last_name,showname,image,deleted',
 				'fe_users', 'uid='.$userId);
 		if ($res) {
 			$this->row = $this->origRow = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
