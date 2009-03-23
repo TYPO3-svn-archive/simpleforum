@@ -66,6 +66,7 @@ class tx_simpleforum_form extends tslib_pibase {
 			$threadOpen = !$thread->isLocked();
 			$template = $this->cObj->getSubpart($this->templateCode, '###REPLYBOX###');
 		}
+		if ($this->pObj->auth->isAdmin) $threadOpen = true;
 
 		if ($GLOBALS['TSFE']->loginUser && $threadOpen) {
 
@@ -96,7 +97,7 @@ class tx_simpleforum_form extends tslib_pibase {
 			$content = $this->cObj->substituteMarkerArray($template, $marker);
 		} elseif ($GLOBALS['TSFE']->loginUser && !$threadOpen) {
 			$content = $this->pObj->pi_getLL('message_threadLocked');
-		} elseif (!$GLOBALS['TSFE']->loginUser && $conf['tid']) {
+		} elseif (!$GLOBALS['TSFE']->loginUser && $thread !== null) {
 			$content = $this->pObj->pi_getLL('message_loginForReply');
 		} else {
 			$content = $this->pObj->pi_getLL('message_loginForThread');
