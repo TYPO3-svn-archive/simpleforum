@@ -43,23 +43,21 @@ class tx_simpleforum_auth {
 
 	public $isAdmin		= false;
 
-	public function __constuct() {
+	/**
+	 * @var tx_simpleforum_pObj
+	 */
+	public $pObj;
 
-	}
-
-	public function start(&$conf, &$piVars, &$pObj) {
-		$this->piVars = &$piVars;
-		$this->conf = &$conf;
-		$this->pObj = &$pObj;
-
+	public function __construct() {
+		$this->pObj = tx_simpleforum_pObj::getInstance();
 		$this->getUserRole();
 	}
 
 	public function getUserRole() {
 
 		// Check whether user is admin
-		$this->isAdmin = (t3lib_div::inList($GLOBALS['TSFE']->fe_user->user['usergroup'], $this->conf['adminGroup']));
-		if (intval($this->conf['noadmin']) == 1) $this->isAdmin = false;
+		$this->isAdmin = (t3lib_div::inList($GLOBALS['TSFE']->fe_user->user['usergroup'], $this->pObj->conf['adminGroup']));
+		if (intval($this->pObj->conf['noadmin']) == 1) $this->isAdmin = false;
 	}
 
 }

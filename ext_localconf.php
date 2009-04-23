@@ -10,11 +10,26 @@ t3lib_extMgm::addUserTSConfig('
 	options.saveDocNew.tx_simpleforum_posts=1
 ');
 
-	## Extending TypoScript from static template uid=43 to set up userdefined tag:
-t3lib_extMgm::addTypoScript($_EXTKEY,'editorcfg','
-	tt_content.CSS_editor.ch.tx_simpleforum_pi1 = < plugin.tx_simpleforum_pi1.CSS_editor
-',43);
+function addTxSimpleforumPlugin($prefix = '') {
+	global $TYPO3_LOADED_EXT;
 
+	$pluginContent = trim('
+plugin.tx_simpleforum'.$prefix.' = USER_INT
+plugin.tx_simpleforum'.$prefix.' {
+	includeLibs = '.$TYPO3_LOADED_EXT['simpleforum']['siteRelPath'].'classes/class.tx_simpleforum_dispatcher.php
+	userFunc = tx_simpleforum_dispatcher->dispatch
+}');
 
-t3lib_extMgm::addPItoST43($_EXTKEY,'pi1/class.tx_simpleforum_pi1.php','_pi1','list_type',0);
+	t3lib_extMgm::addTypoScript('simpleforum', 'setup', '
+# Setting simpleforum plugin TypoScript
+'.$pluginContent);
+
+	t3lib_extMgm::addTypoScript('simpleforum', 'setup', '
+# Setting simpleforum plugin TypoScript
+tt_content.list.20.simpleforum'.$prefix.' = < plugin.tx_simpleforum'.$prefix.'
+', 43);
+}
+
+addTxSimpleforumPlugin('_forum');
+addTxSimpleforumPlugin('_widget');
 ?>

@@ -22,9 +22,11 @@
 			<label index="tx_simpleforum_posts.message">Message</label>
 			<label index="tx_simpleforum_posts.approved">Approved</label>
 			<label index="tx_simpleforum_posts.remote_addr">IP Address</label>
-			<label index="tt_content.list_type_pi1">Forum</label>
+			<label index="tt_content.list_type_forum">Forum</label>
+			<label index="tt_content.list_type_widget">Forum: latest posts</label>
 			<label index="tt_content.pi_flexform.sheet_general">General</label>
 			<label index="tt_content.pi_flexform.introtext">Introtext</label>
+			<label index="tt_content.pi_flexform.forumPage">Page with Forum Plugin</label>
 		</languageKey>
 		<languageKey index="de" type="array">
 			<label index="tx_simpleforum_forums">Foren</label>
@@ -43,9 +45,11 @@
 			<label index="tx_simpleforum_posts.message">Nachricht</label>
 			<label index="tx_simpleforum_posts.approved">Freigeschaltet</label>
 			<label index="tx_simpleforum_posts.remote_addr">IP-Adresse</label>
-			<label index="tt_content.list_type_pi1">Forum</label>
+			<label index="tt_content.list_type_forum">Forum</label>
+			<label index="tt_content.list_type_widget">Forum: neueste Posts</label>
 			<label index="tt_content.pi_flexform.sheet_general">Allgemein</label>
 			<label index="tt_content.pi_flexform.introtext">Introtext</label>
+			<label index="tt_content.pi_flexform.forumPage">Seite mit Foren-Plugin</label>
 		</languageKey>
 	</data>
 </T3locallang>

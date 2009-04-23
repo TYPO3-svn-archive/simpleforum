@@ -40,47 +40,67 @@ class tx_simpleforum_cache {
 	var $scriptRelPath	= 'classes/class.tx_simpleforum_cache.php';	// Path to this script relative to the extension dir.
 	var $extKey			= 'simpleforum';	// The extension key.
 
-	var $cached_data	= '';
+	public $content	= '';
 	var $hasCache		= false;
 
+	/**
+	 *
+	 * @var tx_simpleforum_pObj
+	 */
+	public $pObj;
+
+	/**
+	 * Class constructor
+	 *
+	 * @return void
+	 */
 	public function __construct() {
+		$this->pObj = tx_simpleforum_pObj::getInstance($conf);
 
-	}
-
-	public function start(&$conf, &$piVars, &$pObj) {
-		$this->piVars = &$piVars;
-		$this->conf = &$conf;
-		$this->pObj = &$pObj;
 		$this->checkArray = array(
-			'fid' => intVal($this->piVars['fid']),
-			'tid' => intVal($this->piVars['tid']),
+			'fid' => intVal($this->pObj->piVars['fid']),
+			'tid' => intVal($this->pObj->piVars['tid']),
 			'isAdmin' => $this->pObj->auth->isAdmin,
 			'loginState' => $GLOBALS['TSFE']->loginUser,
-			'page' => $this->piVars['page'],
+			'page' => $this->pObj->piVars['page'],
+			'controller' => $this->pObj->conf['controller'],
 		);
 	}
 
-	public function getCache() {
-		$hash = md5(@serialize($this->checkArray).$this->pObj->parentCE);
+
+	/**
+	 * Reads cached data from database
+	 *
+	 * @return void
+	 */
+	public function fetchCache() {
+		$hash = md5(@serialize($this->checkArray).$this->pObj->cObj->data['uid']);
 		$where = array(
-			'ce_uid=' . $this->pObj->parentCE,
+			'ce_uid=' . $this->pObj->cObj->data['uid'],
 			'hash=\'' . $hash . '\'',
-			'tstamp>' . (mktime() - intVal($this->conf['cache_expires'])),
+			'tstamp>' . (mktime() - intVal($this->pObj->conf['cache_expires'])),
 		);
 		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('*', 'cache_txsimpleforum', implode(' AND ', $where));
 		if ($res) {
 			$row = $GLOBALS['TYPO3_DB']->sql_fetch_assoc($res);
 			if (!empty($row)) $this->hasCache = true;
-			$this->cached_data = $row['content'];
+			$this->content = $row['content'];
 		}
 	}
 
+	/**
+	 * Writes content into database cache
+	 *
+	 * @param string $content content to be chached
+	 * @param array $arr array with forum and thread id values
+	 * @return void
+	 */
 	public function setCache($content, $arr) {
-		$hash = md5(@serialize($this->checkArray).$this->pObj->parentCE);
+		$hash = md5(@serialize($this->checkArray).$this->pObj->cObj->data['uid']);
 
 		$data = array(
 			'hash' => $hash,
-			'ce_uid' => $this->pObj->parentCE,
+			'ce_uid' => $this->pObj->cObj->data['uid'],
 			'fid' => intVal($arr['fid']),
 			'tid' => intVal($arr['tid']),
 			'page' => intVal($this->piVars['page']),
@@ -90,6 +110,7 @@ class tx_simpleforum_cache {
 
 		$this->deleteCacheSingle($data['hash']);
 		$res = $GLOBALS['TYPO3_DB']->exec_INSERTquery('cache_txsimpleforum', $data);
+		$this->content = $content;
 	}
 
 	public function deleteCacheForum($fid) {
@@ -107,6 +128,21 @@ class tx_simpleforum_cache {
 		$res = $GLOBALS['TYPO3_DB']->exec_DELETEquery('cache_txsimpleforum', 'hash=' . $GLOBALS['TYPO3_DB']->fullQuoteStr($hash, 'cache_txsimplefourm'));
 	}
 
+	public function getContent() {
+		$content = $this->content;
+		$content = $this->setDateStrings($content);
+		return $content;
+	}
+
+	protected function setDateStrings($content) {
+		$pattern = '%%%##%%(\d+)%%##%%%';
+		$matches = array();
+		preg_match_all('/' . $pattern . '/', $content, $matches);
+		foreach ($matches[1] as $key => $date) {
+			$content = str_replace($matches[0][$key], tx_simpleforum_dateViewHelper::lastModString($date), $content);
+		}
+		return $content;
+	}
 
 }
 

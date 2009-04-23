@@ -24,16 +24,16 @@
 
 require_once(PATH_tslib.'class.tslib_pibase.php');
 
-require_once(t3lib_extMgm::extPath('simpleforum', 'model/class.tx_simpleforum_forum.php'));
-require_once(t3lib_extMgm::extPath('simpleforum', 'model/class.tx_simpleforum_thread.php'));
-require_once(t3lib_extMgm::extPath('simpleforum', 'model/class.tx_simpleforum_post.php'));
-require_once(t3lib_extMgm::extPath('simpleforum', 'model/class.tx_simpleforum_user.php'));
+require_once(t3lib_extMgm::extPath('simpleforum', 'classes/model/class.tx_simpleforum_forum.php'));
+require_once(t3lib_extMgm::extPath('simpleforum', 'classes/model/class.tx_simpleforum_thread.php'));
+require_once(t3lib_extMgm::extPath('simpleforum', 'classes/model/class.tx_simpleforum_post.php'));
+require_once(t3lib_extMgm::extPath('simpleforum', 'classes/model/class.tx_simpleforum_user.php'));
 
 require_once(t3lib_extMgm::extPath('simpleforum', 'classes/class.tx_simpleforum_admin.php'));
 require_once(t3lib_extMgm::extPath('simpleforum', 'classes/class.tx_simpleforum_auth.php'));
 require_once(t3lib_extMgm::extPath('simpleforum', 'classes/class.tx_simpleforum_cache.php'));
 
-require_once(t3lib_extMgm::extPath('simpleforum', 'views/class.tx_simpleforum_rendering.php'));
+require_once(t3lib_extMgm::extPath('simpleforum', 'classes/views/class.tx_simpleforum_rendering.php'));
 
 
 /**
@@ -145,53 +145,7 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 
 
 	function dispatcher() {
-		$continue = true;
-		$content = '';
 
-		/**
-		 * ADMIN ACTIONS
-		 */
-		if (isset($this->piVars['action']) || isset($this->piVars['adminAction'])) {
-			$admin = new $this->model['admin'];
-			$admin->start($this->conf, $this->piVars, $this);
-
-			$content .= $admin->dispatch();
-			$continue = $admin->continue;
-		}
-		if (!$continue) return $content;
-
-
-
-		/*
-		 * PROCESS SUBMITTED DATA
-		 */
-		$this->processSubmission();
-
-
-
-		/*
-		 * RETURN FORUM DATA
-		 */
-		$this->cache->getCache();
-		if (!$this->cache->hasCache) {
-
-			if (intVal($this->piVars['tid']) > 0) {
-				$dataContent = $this->postlist(intVal($this->piVars['tid']));
-			} elseif (intVal($this->piVars['fid']) > 0) {
-				$dataContent = $this->threadlist(intVal($this->piVars['fid']));
-			} else {
-				$dataContent = $this->forumlist();
-			}
-
-			$this->cache->setCache($dataContent, array('fid'=>$this->piVars['fid'], 'tid'=>$this->piVars['tid']));
-			$content .= $dataContent;
-		} else {
-			$content .= $this->cache->cached_data;
-		}
-
-		$content = $this->afterCacheSubstitution($content);
-
-		return $content;
 	}
 
 	function forumlist() {
@@ -279,8 +233,7 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 
 	function initPagebrowserThreads(tx_simpleforum_forum &$forum) {
 		$where = $this->getThreadsWhere($forum);
-		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('COUNT(uid)',
-					'tx_simpleforum_threads', $where);
+		$res = $GLOBALS['TYPO3_DB']->exec_SELECTquery('COUNT(uid)', 'tx_simpleforum_threads', $where);
 		if ($res) {
 			$temp = $GLOBALS['TYPO3_DB']->sql_fetch_row($res);
 			$this->numberOfPages = $temp[0];
@@ -318,46 +271,6 @@ class tx_simpleforum_pi1 extends tslib_pibase {
 
 		return $content;
 	}
-
-	function replaceDateStrings($content) {
-		$pattern = '%%%##%%(\d+)%%##%%%';
-		$matches = array();
-		preg_match_all('/' . $pattern . '/', $content, $matches);
-		foreach ($matches[1] as $key => $date) {
-			$content = str_replace($matches[0][$key], $this->lastModString($date), $content);
-		}
-		return $content;
-	}
-
-	/**
-	 * Returns formarted string with 'last modified date'
-	 *
-	 * @param	integer		$lastModTs: timestamp on which calculation is based
-	 * @return	string		formarted timespan/date
-	 */
-	function lastModString($lastModTs) {
-		$lastModTs = intVal($lastModTs);
-		$diff = time() - $lastModTs;
-
-		if ($diff < (60*60)) {
-			//Angabe in Minuten
-			$content = round(($diff/60),0);
-			$content = $this->pi_getLL('lastmod_pre') . ' ' . $content . ' ' . ($content == 1 ? $this->pi_getLL('minutes_single') : $this->pi_getLL('minutes'));
-		} elseif ($diff < ((60*60*24))) {
-			//Angabe in Stunden
-			$content = round(($diff/(60*60)),0);
-			$content = $this->pi_getLL('lastmod_pre') . ' ' . $content . ' ' . ($content == 1 ? $this->pi_getLL('hours_single') : $this->pi_getLL('hours'));
-		} elseif ($diff < ((60*60*24*5))) {
-			//Angabe in Tagen
-			$content = round(($diff/(60*60*24)),0);
-			$content = $this->pi_getLL('lastmod_pre') . ' ' . $content . ' ' . ($content == 1 ? $this->pi_getLL('days_single') : $this->pi_getLL('days'));
-		} else {
-			//Datum augeben
-			$content = strftime($this->conf['strftime'], $lastModTs);
-		}
-		return $content;
-	}
-
 
 
 
