@@ -30,7 +30,7 @@
  */
 
 /**
- * [DESCRIPTION]
+ * Dispatcher
  *
  * @author Peter Schuster <typo3@peschuster.de>
  * @package TYPO3

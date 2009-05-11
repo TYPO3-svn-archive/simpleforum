@@ -99,6 +99,7 @@ abstract class tx_simpleforum_abstractModel {
 	public function save() {
 		$diff = array_diff_assoc($this->data, $this->persistedData);
 		if (!empty($diff)) {
+			$this->data['tstamp'] = $diff['tstamp'] = mktime();
 			if (intVal($this->data['uid']) > 0) {
 				unset($diff['uid']);
 				$GLOBALS['TYPO3_DB']->exec_UPDATEquery($this->table, 'uid=' . $this->data['uid'], $diff);
@@ -114,7 +115,7 @@ abstract class tx_simpleforum_abstractModel {
 			$refindex->updateRefIndexTable($this->table, $this->data['uid']);
 		}
 
-		return self;
+		return $this;
 	}
 
 	/**

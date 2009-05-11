@@ -32,4 +32,6 @@ tt_content.list.20.simpleforum'.$prefix.' = < plugin.tx_simpleforum'.$prefix.'
 
 addTxSimpleforumPlugin('_forum');
 addTxSimpleforumPlugin('_widget');
+
+$TYPO3_CONF_VARS['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['clearAllCache_additionalTables']['cache_simpleforum'] = 'cache_simpleforum';
 ?>
