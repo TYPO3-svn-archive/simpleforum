@@ -9,8 +9,8 @@ plugin.tx_simpleforum_forum {
 	profileParam = tx_feuser_pi1[showUid]
 	storagePid = 0
 	preventDuplicatePosts = 1
-	lockedIcon = EXT:simpleforum/res/lock.png
-	adminIcon = EXT:simpleforum/res/cog.png
+	lockedIcon = EXT:simpleforum/res/images/lock.png
+	adminIcon = EXT:simpleforum/res/images/cog.png
 	adminGroup = 4
 	introtext.wrap = <p class="introtext">|</p>
 	cache_expires = 43200

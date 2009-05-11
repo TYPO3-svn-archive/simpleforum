@@ -31,6 +31,7 @@
 .replyBox textarea { margin: 4px 0 7px; }
 .replyBox h3 { margin-bottom: 12px !important; font-size:1.3em !important; }
 .replyBox label { font-weight: bold; }
+#tx-simpleforum-pi1-reply-title { width: 250px; }
 .tx-simpleforum .introtext { margin-bottom: 20px !important; }
 
 .tx-simpleforum-contextmenu { width: 100px; background-color:#F9F9F9; border: solid thin #ABB2BC; }

@@ -74,6 +74,12 @@ class tx_simpleforum_dispatcher {
 
 		$this->init($conf);
 
+		$postData = t3lib_div::_POST($this->pObj->prefixId);
+		if (!empty($postData)) {
+			$dataController = new tx_simpleforum_data($postData);
+			$dataController->processSubmission();
+		}
+
 		$this->pObj->cache->fetchCache();
 		if (!$this->pObj->cache->hasCache || $this->pObj->conf['no_cache'] == 1) {
 			$controller = t3lib_div::makeInstance('tx_simpleforum_' . $this->pObj->conf['controller'] . 'Controller');
